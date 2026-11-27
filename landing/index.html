@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monaco · management renovări</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+:root {
+  /* Layout: o pagină-plan de șantier — cote (linii de dimensiune) leagă secțiunile, ca pe o planșă tehnică */
+  --paper: #eceeec;
+  --sheet: #f8f9f8;
+  --ink: #1b1f1e;
+  --muted: #5d6663;
+  --line: #c9cfcc;
+  --accent: #d9510b;
+  --accent-soft: #f7e3d6;
+  --good: #2f7a52;
+  --good-soft: #dceee3;
+  --warn: #b5401a;
+  --warn-soft: #f6dcd2;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121514; --sheet: #1a1e1d; --ink: #e7ebe9; --muted: #9aa5a1; --line: #323a37;
+    --accent: #f2742e; --accent-soft: #3a2418; --good: #6cc597; --good-soft: #1b3226; --warn: #ff8a5c; --warn-soft: #3d2117;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121514; --sheet: #1a1e1d; --ink: #e7ebe9; --muted: #9aa5a1; --line: #323a37;
+  --accent: #f2742e; --accent-soft: #3a2418; --good: #6cc597; --good-soft: #1b3226; --warn: #ff8a5c; --warn-soft: #3d2117;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; line-height: 1.02; letter-spacing: -0.005em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); text-transform: uppercase; }
+h2 { font-size: clamp(2rem, 4.2vw, 3rem); text-transform: uppercase; }
+h3 { font-size: 1.45rem; font-weight: 600; }
+p { margin: 0; max-width: 62ch; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+section { padding: 88px 0; border-top: 1px solid var(--line); }
+.eyebrow { font: 500 0.78rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+.eyebrow::after { content: ""; flex: 0 0 48px; height: 1px; background: var(--accent); }
+.lead { font-size: 1.15rem; color: var(--muted); margin-top: 18px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: #fff; font: 600 1rem/1 var(--body); padding: 16px 22px; border-radius: 4px; border: 0; cursor: pointer; text-decoration: none; }
+.btn:hover { filter: brightness(1.07); }
+.btn:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible, label.chip:focus-within { outline: 3px solid var(--ink); outline-offset: 3px; }
+.tag-demo { font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border: 1px dashed var(--line); padding: 6px 8px; border-radius: 3px; display: inline-block; }
+
+/* Header */
+header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; justify-content: space-between; align-items: center; height: 64px; }
+.brand { font: 700 1.6rem/1 var(--display); letter-spacing: 0.12em; }
+.brand span { color: var(--accent); }
+header .btn { padding: 11px 16px; font-size: 0.92rem; }
+
+/* Hero */
+.hero { padding: 72px 0 80px; border-top: 0; }
+.hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
+.cota { margin: 30px 0 34px; max-width: 520px; }
+.cota-line { position: relative; height: 14px; border-left: 2px solid var(--ink); border-right: 2px solid var(--ink); }
+.cota-line::before { content: ""; position: absolute; left: 0; right: 0; top: 6px; border-top: 1.5px solid var(--ink); }
+.cota-labels { display: flex; justify-content: space-between; font: 500 0.78rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 8px; color: var(--muted); }
+.cota-labels b { color: var(--ink); font-weight: 500; }
+.hero-actions { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.hero-note { color: var(--muted); font-size: 0.92rem; }
+
+/* Mock card */
+.mock { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 22px; box-shadow: 0 1px 0 var(--line), 0 18px 40px -24px rgba(0,0,0,0.25); }
+.mock-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+.mock-title { font: 600 1rem/1.3 var(--body); }
+.mock-sub { color: var(--muted); font-size: 0.85rem; }
+.bar-row { display: grid; grid-template-columns: 96px 1fr 128px; gap: 12px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.bar { height: 10px; background: var(--paper); border-radius: 2px; position: relative; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--ink); border-radius: 2px; }
+.bar-row.over .bar i { background: var(--warn); }
+.bar-row .num { text-align: right; font: 400 0.8rem/1.2 var(--mono); white-space: nowrap; }
+.bar-row.over .num { color: var(--warn); font-weight: 500; }
+.mock-foot { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 2px solid var(--ink); font: 500 0.9rem/1 var(--mono); }
+.alert { margin-top: 14px; background: var(--warn-soft); color: var(--warn); padding: 10px 12px; border-radius: 4px; font-size: 0.86rem; }
+
+/* Problems */
+.problems { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 36px; }
+label.chip { display: flex; gap: 12px; align-items: flex-start; background: var(--sheet); border: 1.5px solid var(--line); border-radius: 6px; padding: 16px; cursor: pointer; font-weight: 500; line-height: 1.35; transition: border-color .15s, background .15s; }
+label.chip input { appearance: none; width: 20px; height: 20px; flex: 0 0 20px; border: 1.5px solid var(--muted); border-radius: 3px; margin: 1px 0 0; display: grid; place-content: center; background: var(--sheet); }
+label.chip input::after { content: ""; width: 10px; height: 10px; background: var(--accent); border-radius: 1px; transform: scale(0); transition: transform .12s; }
+label.chip input:checked::after { transform: scale(1); }
+label.chip:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.problems-out { margin-top: 20px; font: 500 0.92rem/1.4 var(--mono); color: var(--muted); min-height: 1.4em; }
+.problems-out b { color: var(--accent); font-weight: 500; }
+
+/* Journey */
+.journey { margin-top: 48px; display: grid; gap: 0; position: relative; }
+.step { display: grid; grid-template-columns: 96px 1fr; gap: 28px; padding: 32px 0; border-top: 1px solid var(--line); position: relative; transition: background .2s; }
+.step:last-child { border-bottom: 1px solid var(--line); }
+.step-num { font: 700 3.4rem/0.9 var(--display); color: var(--line); transition: color .2s; }
+.step.is-hit .step-num { color: var(--accent); }
+.step.is-hit { background: linear-gradient(90deg, var(--accent-soft), transparent 70%); }
+.step-hit { display: none; font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-top: 10px; }
+.step.is-hit .step-hit { display: block; }
+.step-body h3 { margin-bottom: 14px; }
+.step-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.col-label { font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.col-today .col-label { color: var(--muted); }
+.col-today p { color: var(--muted); }
+.col-with .col-label { color: var(--accent); }
+.feats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding: 0; list-style: none; }
+.feats li { font: 400 0.8rem/1 var(--mono); border: 1px solid var(--line); background: var(--sheet); padding: 7px 9px; border-radius: 3px; }
+
+/* Screens */
+.tabs { display: flex; gap: 6px; margin: 36px 0 0; flex-wrap: wrap; }
+.tabs button { font: 500 0.95rem/1 var(--body); padding: 12px 16px; background: transparent; color: var(--muted); border: 1.5px solid var(--line); border-radius: 4px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.screen-wrap { display: grid; grid-template-columns: 1fr 300px; gap: 40px; margin-top: 20px; align-items: start; }
+.screen { display: none; }
+.screen.active { display: block; }
+.screen-note h3 { margin-bottom: 10px; }
+.screen-note p { color: var(--muted); font-size: 0.98rem; }
+table.mt { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.mt th { text-align: left; font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0 8px 10px 0; }
+table.mt td { border-top: 1px solid var(--line); padding: 11px 8px 11px 0; vertical-align: middle; }
+table.mt td.r, table.mt th.r { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font: 500 0.74rem/1 var(--mono); padding: 5px 8px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { background: var(--good-soft); color: var(--good); }
+.pill.mid { background: var(--accent-soft); color: var(--accent); }
+.pill.idle { background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.countdown { font: 500 0.78rem/1.2 var(--mono); color: var(--warn); }
+.screen-scroll { overflow-x: auto; }
+
+/* Facts */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 40px; }
+.fact { background: var(--sheet); padding: 26px 24px; }
+.fact .big { font: 700 2.6rem/1 var(--display); }
+.fact .unit { font: 500 0.82rem/1 var(--mono); color: var(--muted); margin-left: 4px; }
+.fact p { margin-top: 12px; font-size: 0.95rem; }
+.fact .then { color: var(--accent); font-weight: 500; }
+
+/* Stages */
+.stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 44px; position: relative; }
+.stage { padding: 0 24px 0 0; }
+.stage-bar { height: 8px; margin-bottom: 20px; border-left: 2px solid var(--ink); position: relative; }
+.stage-bar::before { content: ""; position: absolute; left: 0; right: 0; top: 3px; border-top: 2px solid var(--ink); }
+.stage:first-child .stage-bar::before { border-color: var(--accent); }
+.stage:last-child .stage-bar { border-right: 2px solid var(--ink); }
+.stage .k { font: 500 0.75rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stage:first-child .k { color: var(--accent); }
+.stage h3 { margin: 8px 0 10px; }
+.stage ul { margin: 14px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.95rem; }
+.stage li { margin: 4px 0; }
+.later { margin-top: 36px; padding: 18px 20px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); font-size: 0.95rem; }
+.later b { color: var(--ink); }
+
+/* Full list */
+details.all { margin-top: 32px; background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; }
+details.all > summary { cursor: pointer; list-style: none; padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 600; }
+details.all > summary::-webkit-details-marker { display: none; }
+details.all > summary .plus { font: 500 1.4rem/1 var(--mono); color: var(--accent); }
+details.all[open] > summary .plus { transform: rotate(45deg); }
+.groups { padding: 4px 22px 22px; columns: 2 340px; column-gap: 40px; }
+.group { break-inside: avoid; margin-bottom: 26px; }
+.group h4 { font: 600 1.1rem/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1.5px solid var(--ink); }
+.group dl { margin: 0; }
+.group dt { font-weight: 600; font-size: 0.92rem; margin-top: 10px; }
+.group dd { margin: 2px 0 0; color: var(--muted); font-size: 0.88rem; }
+.legend { padding: 0 22px 18px; font-size: 0.86rem; color: var(--muted); }
+
+/* Contact */
+.contact { background: var(--ink); color: var(--paper); border-top: 0; }
+.contact h2 { color: var(--paper); }
+.contact .lead { color: color-mix(in srgb, var(--paper) 70%, transparent); }
+.contact-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 56px; }
+form.book { display: grid; gap: 14px; }
+form.book .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+form.book label { display: grid; gap: 6px; font: 500 0.78rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: color-mix(in srgb, var(--paper) 70%, transparent); }
+form.book input[type=text], form.book input[type=email], form.book input[type=tel], form.book select {
+  font: 400 1rem/1.3 var(--body); padding: 12px 12px; border-radius: 4px; border: 1px solid color-mix(in srgb, var(--paper) 30%, transparent); background: color-mix(in srgb, var(--paper) 6%, transparent); color: var(--paper);
+}
+form.book select option { color: #1b1f1e; }
+.form-problems { display: grid; gap: 8px; }
+form.book .form-problems label { display: flex; gap: 10px; align-items: center; text-transform: none; letter-spacing: 0; font: 400 0.95rem/1.3 var(--body); color: var(--paper); }
+.form-problems input { accent-color: var(--accent); width: 17px; height: 17px; }
+fieldset { border: 0; padding: 0; margin: 0; }
+legend { font: 500 0.78rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: color-mix(in srgb, var(--paper) 70%, transparent); margin-bottom: 10px; padding: 0; }
+.form-msg { display: none; border: 1px solid var(--accent); border-radius: 4px; padding: 16px; font-size: 0.95rem; }
+.form-msg.show { display: block; }
+.form-msg pre { white-space: pre-wrap; font: 400 0.85rem/1.5 var(--mono); margin: 10px 0 0; color: color-mix(in srgb, var(--paper) 80%, transparent); }
+footer { padding: 28px 0 40px; background: var(--ink); color: color-mix(in srgb, var(--paper) 55%, transparent); font: 400 0.82rem/1.4 var(--mono); }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid color-mix(in srgb, var(--paper) 18%, transparent); padding-top: 22px; }
+
+@media (max-width: 860px) {
+  .hero-grid, .screen-wrap, .contact-grid { grid-template-columns: 1fr; }
+  .stages { grid-template-columns: 1fr; gap: 28px; }
+  .step { grid-template-columns: 1fr; gap: 10px; }
+  .step-cols { grid-template-columns: 1fr; gap: 14px; }
+  section { padding: 64px 0; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  form.book .row { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 78px 1fr 118px; gap: 8px; }
+  header .btn { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">MONA<span>C</span>O</div>
+    <a class="btn" href="#programare">Programați analiza gratuită</a>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="eyebrow">Management pentru proiecte de renovare</div>
+        <h1>Bugetul proiectului, sub control până la predare</h1>
+        <p class="lead">Construim pentru firma dumneavoastră un sistem în care estimarea, bugetul, comenzile de materiale și plățile clientului stau într-un singur loc. Pornim de la felul în care lucrați astăzi.</p>
+        <div class="cota" aria-hidden="true">
+          <div class="cota-line"></div>
+          <div class="cota-labels"><b>Prima estimare</b><span>buget · comenzi · plăți</span><b>Predare</b></div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn" href="#programare">Programați analiza gratuită</a>
+          <span class="hero-note">O oră, pe un proiect recent de-al dumneavoastră.</span>
+        </div>
+      </div>
+
+      <div class="mock" aria-label="Machetă: buget față de cheltuit">
+        <div class="mock-head">
+          <div>
+            <div class="mock-title">Apartament 3 camere · buget</div>
+            <div class="mock-sub">Planificat față de cheltuit, pe categorii</div>
+          </div>
+          <span class="tag-demo">Machetă · date demonstrative</span>
+        </div>
+        <div class="bar-row"><span>Manoperă</span><div class="bar"><i style="width:70%"></i></div><span class="num">9.800 / 14.000 €</span></div>
+        <div class="bar-row"><span>Materiale</span><div class="bar"><i style="width:83%"></i></div><span class="num">7.900 / 9.500 €</span></div>
+        <div class="bar-row over"><span>Instalații</span><div class="bar"><i style="width:100%"></i></div><span class="num">5.400 / 5.000 €</span></div>
+        <div class="bar-row"><span>Mobilier</span><div class="bar"><i style="width:35%"></i></div><span class="num">2.100 / 6.000 €</span></div>
+        <div class="bar-row"><span>Management</span><div class="bar"><i style="width:60%"></i></div><span class="num">900 / 1.500 €</span></div>
+        <div class="mock-foot"><span>Total</span><span>26.100 / 36.000 €</span></div>
+        <div class="alert">Instalațiile au depășit bugetul cu 400 €. Ați aflat acum, nu la predare.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. UNDE PIERDEȚI BANI -->
+  <section id="probleme">
+    <div class="wrap">
+      <div class="eyebrow">Începem de la dumneavoastră</div>
+      <h2>Unde pierdeți bani acum?</h2>
+      <p class="lead">Bifați ce vi se întâmplă. Mai jos vă arătăm în ce moment al proiectului apare fiecare problemă și ce primiți pentru ea.</p>
+      <div class="problems" role="group" aria-label="Probleme">
+        <label class="chip"><input type="checkbox" id="p-buget" data-p="buget"><span>Bugetul nu se leagă de cheltuielile reale</span></label>
+        <label class="chip"><input type="checkbox" id="p-comenzi" data-p="comenzi"><span>Comenzile se urmăresc pe mesaje și telefon</span></label>
+        <label class="chip"><input type="checkbox" id="p-plati" data-p="plati"><span>Plățile clientului se verifică greu</span></label>
+        <label class="chip"><input type="checkbox" id="p-materiale" data-p="materiale"><span>Materialele se estimează aproximativ</span></label>
+        <label class="chip"><input type="checkbox" id="p-predare" data-p="predare"><span>La predare lipsesc documente și contacte</span></label>
+      </div>
+      <div class="problems-out" id="problems-out" aria-live="polite">Nicio problemă bifată încă.</div>
+    </div>
+  </section>
+
+  <!-- 1. PARCURSUL -->
+  <section id="parcurs">
+    <div class="wrap">
+      <div class="eyebrow">Ce primiți, pas cu pas</div>
+      <h2>Parcursul unui proiect de renovare</h2>
+      <p class="lead">Aceeași lucrare pe care o faceți deja, de la prima discuție cu clientul până la predarea cheilor. La fiecare pas: ce se întâmplă de obicei și ce primiți cu Monaco.</p>
+
+      <div class="journey">
+        <article class="step" data-p="materiale">
+          <div><div class="step-num">01</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Estimarea</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>Prețul se dă „din ochi” sau ca procent din manoperă. Materialele reale se află abia la cumpărare.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Dați clientului un preț realist din prima discuție, calculat pe cantități reale și pe proiecte asemănătoare.</p></div>
+            </div>
+            <ul class="feats"><li>Estimare rapidă pe m²</li><li>Șabloane pe tip de lucrare</li><li>Calcul pe cantități reale</li><li>Materiale calculate din cantități</li><li>Mobilier pe niveluri de preț</li></ul>
+          </div>
+        </article>
+
+        <article class="step" data-p="plati">
+          <div><div class="step-num">02</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Devizul și semnarea</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>Un singur deviz pentru firmă și pentru client, trimis pe mesaj. Tranșele de plată se stabilesc verbal.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Un deviz detaliat pentru echipă și unul simplu pentru client, cu graficul de plăți și contractul semnat de pe telefon.</p></div>
+            </div>
+            <ul class="feats"><li>Deviz pe etape</li><li>Deviz intern și deviz pentru client</li><li>Ofertă cu identitatea firmei</li><li>Grafic de plăți pe etape</li><li>Contract din deviz</li><li>Semnătură electronică</li></ul>
+          </div>
+        </article>
+
+        <article class="step" data-p="buget">
+          <div><div class="step-num">03</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Bugetul</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>Bugetul stă într-un fișier separat de deviz. Cât s-a cheltuit pe fiecare categorie se adună la final.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Știți oricând cât ați cheltuit față de cât ați planificat, pe fiecare categorie, și aflați din timp dacă depășiți.</p></div>
+            </div>
+            <ul class="feats"><li>Buget pe categorii</li><li>Estimat, deviz, buget</li><li>Buget față de cheltuit</li><li>Cheltuieli pe proiect</li><li>Prognoză la final</li><li>Avertizare la depășire</li><li>Marja pe proiect</li></ul>
+          </div>
+        </article>
+
+        <article class="step" data-p="comenzi materiale">
+          <div><div class="step-num">04</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Comenzile și livrările</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>Ofertele și comenzile se urmăresc pe WhatsApp. Un material cu livrare lungă, comandat târziu, oprește lucrarea.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Lista de cumpărături iese din deviz, ofertele se compară una lângă alta, iar fiecare material are starea lui: ofertat, rezervat, livrat.</p></div>
+            </div>
+            <ul class="feats"><li>Necesar de cumpărat</li><li>Cerere de ofertă</li><li>Compararea ofertelor</li><li>Comandă și proformă</li><li>Evidența comenzilor</li><li>Termene de livrare</li><li>Livrare sincronizată cu montajul</li></ul>
+          </div>
+        </article>
+
+        <article class="step" data-p="buget plati">
+          <div><div class="step-num">05</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Șantierul și plățile</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>Când clientul întreabă cât a plătit și ce urmează, răspunsul se reface din extrase de cont și tabele.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Vedeți ce s-a încasat, ce urmează și ce plătiți furnizorilor. Clientul primește un link cu situația, actualizat automat.</p></div>
+            </div>
+            <ul class="feats"><li>Evidența plăților clientului</li><li>Plăți către furnizori</li><li>Starea lucrării</li><li>Plan săptămânal</li><li>Lucrări suplimentare aprobate</li><li>Pagina proiectului pentru client</li><li>Notificări</li></ul>
+          </div>
+        </article>
+
+        <article class="step" data-p="predare">
+          <div><div class="step-num">06</div><div class="step-hit">Vă privește</div></div>
+          <div class="step-body">
+            <h3>Predarea</h3>
+            <div class="step-cols">
+              <div class="col-today"><div class="col-label">De obicei</div><p>La final, documentele, garanțiile și contactele furnizorilor și meseriașilor sunt adunate în grabă.</p></div>
+              <div class="col-with"><div class="col-label">Cu Monaco</div><p>Dosarul proiectului s-a completat pe parcurs. Clientul primește tot, inclusiv pe cine să sune dacă se strică ceva.</p></div>
+            </div>
+            <ul class="feats"><li>Dosarul proiectului</li><li>Lista de contacte la predare</li><li>Raport pe proiect</li></ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. ECRANE -->
+  <section id="ecrane">
+    <div class="wrap">
+      <div class="eyebrow">Cum arată</div>
+      <h2>Trei ecrane, trei întrebări</h2>
+      <p class="lead">Machete ale principalelor ecrane, cu date demonstrative. Sistemul final are categoriile, etapele și identitatea firmei dumneavoastră.</p>
+
+      <div class="tabs" role="tablist" aria-label="Ecrane-exemplu">
+        <button role="tab" id="tab-buget" aria-selected="true" aria-controls="sc-buget">Cât am cheltuit?</button>
+        <button role="tab" id="tab-comenzi" aria-selected="false" aria-controls="sc-comenzi">Ce lipsește de pe șantier?</button>
+        <button role="tab" id="tab-client" aria-selected="false" aria-controls="sc-client">Ce vede clientul?</button>
+      </div>
+
+      <div class="screen-wrap">
+        <div>
+          <div class="screen mock active" id="sc-buget" role="tabpanel" aria-labelledby="tab-buget">
+            <div class="mock-head"><div><div class="mock-title">Buget față de cheltuit</div><div class="mock-sub">Apartament 3 camere · etapa Finisaje</div></div><span class="tag-demo">Machetă · date demonstrative</span></div>
+            <div class="screen-scroll">
+              <table class="mt">
+                <thead><tr><th>Categorie</th><th class="r">Planificat</th><th class="r">Cheltuit</th><th class="r">Rămas</th><th>Stare</th></tr></thead>
+                <tbody>
+                  <tr><td>Manoperă</td><td class="r">14.000 €</td><td class="r">9.800 €</td><td class="r">4.200 €</td><td><span class="pill ok">În buget</span></td></tr>
+                  <tr><td>Materiale</td><td class="r">9.500 €</td><td class="r">7.900 €</td><td class="r">1.600 €</td><td><span class="pill mid">83% folosit</span></td></tr>
+                  <tr><td>Instalații</td><td class="r">5.000 €</td><td class="r">5.400 €</td><td class="r">−400 €</td><td><span class="pill warn">Depășit</span></td></tr>
+                  <tr><td>Mobilier</td><td class="r">6.000 €</td><td class="r">2.100 €</td><td class="r">3.900 €</td><td><span class="pill ok">În buget</span></td></tr>
+                  <tr><td>Management</td><td class="r">1.500 €</td><td class="r">900 €</td><td class="r">600 €</td><td><span class="pill ok">În buget</span></td></tr>
+                  <tr><td><b>Total</b></td><td class="r"><b>36.000 €</b></td><td class="r"><b>26.100 €</b></td><td class="r"><b>9.900 €</b></td><td><span class="pill idle">Prognoză: 36.400 €</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="screen mock" id="sc-comenzi" role="tabpanel" aria-labelledby="tab-comenzi">
+            <div class="mock-head"><div><div class="mock-title">Evidența comenzilor</div><div class="mock-sub">Apartament 3 camere · materiale</div></div><span class="tag-demo">Machetă · date demonstrative</span></div>
+            <div class="screen-scroll">
+              <table class="mt">
+                <thead><tr><th>Material</th><th>Furnizor</th><th>Stare</th><th>Termen</th></tr></thead>
+                <tbody>
+                  <tr><td>Gresie porțelanată 60×120</td><td>Furnizor A</td><td><span class="pill ok">Livrat</span></td><td class="mock-sub">pe șantier</td></tr>
+                  <tr><td>Obiecte sanitare</td><td>Furnizor B</td><td><span class="pill mid">Rezervat</span></td><td class="mock-sub">livrare în 9 zile</td></tr>
+                  <tr><td>Parchet stejar</td><td>3 oferte primite</td><td><span class="pill idle">Ofertat</span></td><td class="countdown">comandați în 6 zile</td></tr>
+                  <tr><td>Uși interioare</td><td>Furnizor D</td><td><span class="pill idle">Ofertat</span></td><td class="mock-sub">livrare 5 săptămâni</td></tr>
+                  <tr><td>Adeziv și chit</td><td>Furnizor A</td><td><span class="pill ok">Livrat</span></td><td class="mock-sub">pe șantier</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="screen mock" id="sc-client" role="tabpanel" aria-labelledby="tab-client">
+            <div class="mock-head"><div><div class="mock-title">Pagina proiectului pentru client</div><div class="mock-sub">Ce vede proprietarul, prin link</div></div><span class="tag-demo">Machetă · date demonstrative</span></div>
+            <div class="screen-scroll">
+              <table class="mt">
+                <thead><tr><th>Tranșă</th><th class="r">Sumă</th><th>Stare</th></tr></thead>
+                <tbody>
+                  <tr><td>Avans la semnare</td><td class="r">10.800 €</td><td><span class="pill ok">Achitat</span></td></tr>
+                  <tr><td>Etapa 1 · Instalații</td><td class="r">9.000 €</td><td><span class="pill ok">Achitat</span></td></tr>
+                  <tr><td>Etapa 2 · Finisaje</td><td class="r">9.000 €</td><td><span class="pill mid">Urmează · 15 decembrie</span></td></tr>
+                  <tr><td>Plata finală la recepție</td><td class="r">7.200 €</td><td><span class="pill idle">Planificat</span></td></tr>
+                  <tr><td><b>Total lucrare</b></td><td class="r"><b>36.000 €</b></td><td class="mock-sub">fără prețuri pe unitate</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-note" id="screen-note">
+          <h3 id="note-title">Cât am cheltuit?</h3>
+          <p id="note-text">Fiecare categorie din buget, cu cât era planificat și cât s-a cheltuit până azi. O depășire apare când încă se mai poate corecta, iar prognoza arată cât va costa proiectul la final.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. DIN PROIECTE REALE -->
+  <section id="teren">
+    <div class="wrap">
+      <div class="eyebrow">Din proiecte reale de renovare</div>
+      <h2>Ce am văzut pe șantier</h2>
+      <p class="lead">Situații din proiecte reale, anonimizate. Pe ele am construit fluxurile de mai sus.</p>
+      <div class="facts">
+        <div class="fact">
+          <div><span class="big mono-num">37.000</span><span class="unit">€ buget</span></div>
+          <p>O renovare de 3 camere, de la desfaceri la mobilier. <span class="then">Un buget de această mărime se urmărește pe categorii, nu într-un singur total.</span></p>
+        </div>
+        <div class="fact">
+          <div><span class="big">7.500</span><span class="unit">RON · 2 ore</span></div>
+          <p>O diferență la plăți a cerut două ore de verificat cu clientul. <span class="then">Cu evidența tranșelor, răspunsul se vede pe loc.</span></p>
+        </div>
+        <div class="fact">
+          <div><span class="big">4–5</span><span class="unit">săptămâni</span></div>
+          <p>Atât a durat livrarea unei gresii din Italia. Lucrarea nu s-a oprit doar pentru că a fost comandată din timp. <span class="then">Termenele de livrare vă anunță când e momentul să comandați.</span></p>
+        </div>
+        <div class="fact">
+          <div><span class="big">3 din 3</span><span class="unit">clienți</span></div>
+          <p>Au primit un deviz detaliat și niciunul nu l-a refuzat din cauza prețului. <span class="then">Un deviz clar câștigă încrederea, chiar când prețul e mai mare.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. ETAPE -->
+  <section id="etape">
+    <div class="wrap">
+      <div class="eyebrow">Cum construim</div>
+      <h2>Pe etape, nu totul deodată</h2>
+      <p class="lead">Începem cu partea care vă costă cei mai mulți bani. Fiecare etapă se folosește pe proiecte reale înainte de următoarea, iar plata se face la fiecare parte livrată.</p>
+      <div class="stages">
+        <div class="stage">
+          <div class="stage-bar"></div>
+          <div class="k">Etapa 1</div>
+          <h3>Nucleul: estimare, buget, ofertare</h3>
+          <p>Prețul corect de la început și bugetul care leagă tot restul.</p>
+          <ul><li>Estimare pe cantități reale</li><li>Deviz pe etape, intern și pentru client</li><li>Buget pe categorii, față de cheltuit</li><li>Cereri de ofertă și comparare</li></ul>
+        </div>
+        <div class="stage">
+          <div class="stage-bar"></div>
+          <div class="k">Etapa 2</div>
+          <h3>Urmărirea</h3>
+          <p>Banii și materialele, urmărite în timpul lucrării.</p>
+          <ul><li>Comenzi, livrări și termene</li><li>Plăți de la client și către furnizori</li><li>Prognoză, avertizări și marjă</li><li>Plan săptămânal și rapoarte</li></ul>
+        </div>
+        <div class="stage">
+          <div class="stage-bar"></div>
+          <div class="k">Etapa 3</div>
+          <h3>Clientul și predarea</h3>
+          <p>Ce vede proprietarul și închiderea curată a proiectului.</p>
+          <ul><li>Pagina proiectului pentru client</li><li>Contract și semnătură electronică</li><li>Lucrări suplimentare aprobate</li><li>Dosar și contacte la predare</li></ul>
+        </div>
+      </div>
+      <div class="later"><b>La cerere, mai târziu:</b> calculatoare de necesar, preluarea articolelor din poze, pontaj și programarea echipelor, măsurători pe plan, catalog de produse cu prețuri.</div>
+    </div>
+  </section>
+
+  <!-- 8. LISTA COMPLETĂ -->
+  <section id="lista">
+    <div class="wrap">
+      <div class="eyebrow">Pentru cine vrea detaliile</div>
+      <h2>Toate funcționalitățile</h2>
+      <p class="lead">52 de funcționalități posibile, în 9 grupuri. Nu le construim pe toate: alegem împreună ce vă trebuie.</p>
+      <details class="all">
+        <summary>Vedeți lista completă <span class="plus" aria-hidden="true">+</span></summary>
+        <div class="groups">
+          <div class="group"><h4>Estimare și deviz</h4><dl>
+            <dt>Estimare rapidă pe m²</dt><dd>Un interval de cost din suprafață, camere, băi și nivelul finisajelor.</dd>
+            <dt>Șabloane pe tip de lucrare</dt><dd>Devize gata completate pentru 2 camere, 3 camere, baie.</dd>
+            <dt>Calcul pe cantități reale</dt><dd>Pe metru liniar și m², cu coeficienți din proiecte reale.</dd>
+            <dt>Materiale calculate din cantități</dt><dd>Lista exactă de materiale, nu un procent din manoperă.</dd>
+            <dt>Mobilier pe niveluri de preț</dt><dd>Economic, mediu, premium, nișă, calculat pe volum.</dd>
+            <dt>Deviz pe etape</dt><dd>Desfaceri, instalații, finisaje, specializări, mobilier.</dd>
+            <dt>Deviz intern și deviz pentru client</dt><dd>Detaliat pentru firmă, simplu pentru client.</dd>
+            <dt>Ofertă cu identitatea firmei</dt><dd>Logo, culori și poze din lucrările dumneavoastră.</dd>
+            <dt>Calculatoare de necesar</dt><dd>Șapă, gresie, adeziv, vopsea, BCA, polistiren.</dd>
+            <dt>Preluare din poze</dt><dd>Foaia scrisă de mână, bonul sau factura devin articole.</dd>
+          </dl></div>
+          <div class="group"><h4>Bugetare</h4><dl>
+            <dt>Buget pe categorii</dt><dd>Manoperă, materiale, specializări, mobilier, management.</dd>
+            <dt>Estimat, deviz, buget</dt><dd>Trei niveluri legate, cu istoricul versiunilor.</dd>
+            <dt>Buget față de cheltuit</dt><dd>Planificat și cheltuit, pe fiecare categorie.</dd>
+            <dt>Cheltuieli pe proiect</dt><dd>Bonuri, facturi și plăți, legate de buget.</dd>
+            <dt>Prognoză</dt><dd>Cât va costa proiectul la final.</dd>
+            <dt>Avertizare la depășire</dt><dd>Anunț când o categorie trece de un prag.</dd>
+            <dt>Marja pe proiect</dt><dd>Cât câștigă firma, actualizat pe parcurs.</dd>
+            <dt>Lucrări suplimentare</dt><dd>Modificările cerute, cu preț și acordul clientului.</dd>
+          </dl></div>
+          <div class="group"><h4>Ofertare și achiziții</h4><dl>
+            <dt>Necesar de cumpărat</dt><dd>Lista de cumpărături din deviz, pe etape și furnizori.</dd>
+            <dt>Cerere de ofertă</dt><dd>Trimisă către mai mulți furnizori sau meseriași.</dd>
+            <dt>Compararea ofertelor</dt><dd>Ofertele primite, una lângă alta.</dd>
+            <dt>Comandă și proformă</dt><dd>Comanda trimisă și proforma păstrată lângă proiect.</dd>
+            <dt>Evidența comenzilor</dt><dd>Ofertat, rezervat, livrat.</dd>
+            <dt>Termene de livrare</dt><dd>Vă anunță când trebuie comandat un material cu livrare lungă.</dd>
+            <dt>Livrare sincronizată cu montajul</dt><dd>Furnizorul, livratorul și montatorul, în aceeași zi.</dd>
+            <dt>Baza de furnizori</dt><dd>Contacte, prețuri și termene, de la un proiect la altul.</dd>
+          </dl></div>
+          <div class="group"><h4>Plăți, contracte și facturi</h4><dl>
+            <dt>Grafic de plăți pe etape</dt><dd>Avans, plata la fiecare etapă, plata finală.</dd>
+            <dt>Evidența plăților clientului</dt><dd>Planificat, achitat, urmează.</dd>
+            <dt>Plăți către furnizori și meseriași</dt><dd>Ce s-a plătit și ce e scadent.</dd>
+            <dt>Contract din deviz</dt><dd>Aceleași sume și etape, fără rescriere.</dd>
+            <dt>Semnătură electronică</dt><dd>Clientul semnează de pe telefon.</dd>
+            <dt>Facturi și e-Factura</dt><dd>Facturi din deviz, pe etape, trimise la ANAF.</dd>
+            <dt>Export pentru contabilitate</dt><dd>Cheltuieli și încasări, gata pentru contabil.</dd>
+          </dl></div>
+          <div class="group"><h4>Coordonarea șantierului</h4><dl>
+            <dt>Starea lucrării</dt><dd>Ofertă, acceptat, în execuție, finalizat.</dd>
+            <dt>Plan săptămânal</dt><dd>Ce se face în fiecare săptămână, cu 2–3 săptămâni înainte.</dd>
+            <dt>Programarea echipelor</dt><dd>Cine vine pe șantier și când.</dd>
+            <dt>Jurnal de șantier</dt><dd>Note și poze zilnice, pe etape.</dd>
+            <dt>Situații de lucrări</dt><dd>Ce s-a executat și ce se poate factura.</dd>
+            <dt>Pontaj</dt><dd>Orele lucrate, pe proiect.</dd>
+          </dl></div>
+          <div class="group"><h4>Comunicarea cu clientul</h4><dl>
+            <dt>Pagina proiectului pentru client</dt><dd>Deviz simplificat, plăți și stadiu, printr-un link.</dd>
+            <dt>Aprobarea modificărilor</dt><dd>Clientul aprobă lucrările suplimentare de pe telefon.</dd>
+            <dt>Notificări</dt><dd>Tranșe scadente, etape terminate, comenzi de făcut.</dd>
+          </dl></div>
+          <div class="group"><h4>Predare și documente</h4><dl>
+            <dt>Dosarul proiectului</dt><dd>Documente, poze, facturi și garanții, adunate pe parcurs.</dd>
+            <dt>Lista de contacte la predare</dt><dd>Furnizori, meseriași și service-uri.</dd>
+            <dt>Planșa instalației electrice</dt><dd>Fiecare priză și întrerupător, cu model și circuit.</dd>
+          </dl></div>
+          <div class="group"><h4>Rapoarte și firmă</h4><dl>
+            <dt>Raport pe proiect</dt><dd>Buget față de real, marjă și depășiri.</dd>
+            <dt>Panou cu toate proiectele</dt><dd>Stare, buget, încasări și alerte, pe o pagină.</dd>
+            <dt>Prețuri din proiectele anterioare</dt><dd>Estimările pornesc de la datele firmei.</dd>
+            <dt>Utilizatori și roluri</dt><dd>Fiecare om din firmă cu drepturile lui.</dd>
+            <dt>Export de date</dt><dd>Toate datele firmei, oricând.</dd>
+          </dl></div>
+          <div class="group"><h4>Unelte de precizie</h4><dl>
+            <dt>Măsurători pe plan</dt><dd>Lungimi și suprafețe măsurate direct pe planul apartamentului.</dd>
+            <dt>Catalog de produse cu prețuri</dt><dd>Produse de la furnizori, cu prețuri orientative actualizate.</dd>
+          </dl></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact" id="programare">
+    <div class="wrap contact-grid">
+      <div>
+        <div class="eyebrow">Primul pas</div>
+        <h2>O oră, fără cost</h2>
+        <p class="lead">Alegeți un proiect recent și îl analizăm împreună, de la prima estimare până la predare. Primiți apoi în scris fluxul dumneavoastră actual și locurile în care se pierd timp și bani. Decideți după aceea dacă merită să continuăm.</p>
+      </div>
+      <form class="book" id="book" novalidate>
+        <div class="row">
+          <label for="f-nume">Nume<input type="text" id="f-nume" autocomplete="name"></label>
+          <label for="f-firma">Firma<input type="text" id="f-firma" autocomplete="organization"></label>
+        </div>
+        <div class="row">
+          <label for="f-tel">Telefon<input type="tel" id="f-tel" autocomplete="tel"></label>
+          <label for="f-email">Email<input type="email" id="f-email" autocomplete="email"></label>
+        </div>
+        <label for="f-proiecte">Câte proiecte de renovare aveți pe an?
+          <select id="f-proiecte">
+            <option value="">Alegeți</option>
+            <option>1–3</option><option>4–10</option><option>11–25</option><option>Peste 25</option>
+          </select>
+        </label>
+        <fieldset class="form-problems">
+          <legend>Unde pierdeți bani (preluat de mai sus)</legend>
+          <label><input type="checkbox" id="fp-buget" data-p="buget">Bugetul nu se leagă de cheltuieli</label>
+          <label><input type="checkbox" id="fp-comenzi" data-p="comenzi">Comenzile se urmăresc pe mesaje</label>
+          <label><input type="checkbox" id="fp-plati" data-p="plati">Plățile clientului se verifică greu</label>
+          <label><input type="checkbox" id="fp-materiale" data-p="materiale">Materialele se estimează aproximativ</label>
+          <label><input type="checkbox" id="fp-predare" data-p="predare">Predarea e incompletă</label>
+        </fieldset>
+        <div><button class="btn" type="submit">Programați analiza</button></div>
+        <div class="form-msg" id="form-msg" role="status">
+          <b>Formularul nu este încă conectat.</b> Pagina e în pregătire, așa că datele nu se trimit nicăieri. Iată ce ar primi echipa:
+          <pre id="form-summary"></pre>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>Monaco · un proiect Web Minds SRL</span></div>
+</footer>
+
+<script>
+(function () {
+  const labels = {
+    buget: "Bugetul nu se leagă de cheltuieli",
+    comenzi: "Comenzile se urmăresc pe mesaje",
+    plati: "Plățile clientului se verifică greu",
+    materiale: "Materialele se estimează aproximativ",
+    predare: "Predarea e incompletă"
+  };
+  const top = Array.from(document.querySelectorAll('#probleme input[data-p]'));
+  const form = Array.from(document.querySelectorAll('.form-problems input[data-p]'));
+  const steps = Array.from(document.querySelectorAll('.step'));
+  const out = document.getElementById('problems-out');
+
+  function selected() { return top.filter(i => i.checked).map(i => i.dataset.p); }
+  function render() {
+    const sel = selected();
+    let hits = 0;
+    steps.forEach(s => {
+      const on = s.dataset.p.split(' ').some(p => sel.includes(p));
+      s.classList.toggle('is-hit', on);
+      if (on) hits++;
+    });
+    form.forEach(f => { f.checked = sel.includes(f.dataset.p); });
+    if (!sel.length) { out.textContent = 'Nicio problemă bifată încă.'; return; }
+    const pasi = hits === 1 ? '1 pas' : hits + ' pași';
+    out.innerHTML = 'Ați bifat ' + sel.length + (sel.length === 1 ? ' problemă' : ' probleme') + '. <b>' + pasi + '</b> din parcursul de mai jos vă privesc direct.';
+  }
+  top.forEach(i => i.addEventListener('change', render));
+  form.forEach(f => f.addEventListener('change', () => {
+    const t = top.find(i => i.dataset.p === f.dataset.p);
+    if (t) { t.checked = f.checked; render(); }
+  }));
+
+  const notes = {
+    'tab-buget': ['Cât am cheltuit?', 'Fiecare categorie din buget, cu cât era planificat și cât s-a cheltuit până azi. O depășire apare când încă se mai poate corecta, iar prognoza arată cât va costa proiectul la final.'],
+    'tab-comenzi': ['Ce lipsește de pe șantier?', 'Fiecare material are starea lui: ofertat, rezervat, livrat. Pentru cele cu livrare lungă, sistemul vă spune câte zile mai aveți ca să comandați fără să opriți lucrarea.'],
+    'tab-client': ['Ce vede clientul?', 'Proprietarul primește un link cu tranșele, ce a plătit și ce urmează. Fără prețuri pe unitate și fără detaliile interne ale firmei, deci mai puține întrebări și plăți la timp.']
+  };
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function selectTab(t) {
+    tabs.forEach(b => {
+      const on = b === t;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).classList.toggle('active', on);
+    });
+    document.getElementById('note-title').textContent = notes[t.id][0];
+    document.getElementById('note-text').textContent = notes[t.id][1];
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(t));
+    t.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const n = tabs.at((i + (e.key === 'ArrowRight' ? 1 : -1)) % tabs.length);
+        n.focus(); selectTab(n);
+      }
+    });
+  });
+
+  document.getElementById('book').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim() || '—';
+    const sel = selected().map(p => '  · ' + labels[p]).join('\n') || '  —';
+    document.getElementById('form-summary').textContent =
+      'Nume: ' + v('f-nume') + '\nFirma: ' + v('f-firma') + '\nTelefon: ' + v('f-tel') +
+      '\nEmail: ' + v('f-email') + '\nProiecte pe an: ' + v('f-proiecte') + '\nUnde pierd bani:\n' + sel;
+    document.getElementById('form-msg').classList.add('show');
+  });
+})();
+</script>
+</body>
+</html>

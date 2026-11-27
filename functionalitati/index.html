@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monaco · funcționalități</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+:root {
+  /* Layout: un catalog de planșe — fiecare funcționalitate are schița ei, ca o fișă tehnică; modul prezentare le arată pe rând */
+  --paper: #eceeec;
+  --sheet: #f8f9f8;
+  --ink: #1b1f1e;
+  --muted: #5d6663;
+  --line: #c9cfcc;
+  --accent: #d9510b;
+  --accent-soft: #f7e3d6;
+  --good: #2f7a52;
+  --good-soft: #dceee3;
+  --warn: #b5401a;
+  --warn-soft: #f6dcd2;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121514; --sheet: #1a1e1d; --ink: #e7ebe9; --muted: #9aa5a1; --line: #323a37;
+    --accent: #f2742e; --accent-soft: #3a2418; --good: #6cc597; --good-soft: #1b3226; --warn: #ff8a5c; --warn-soft: #3d2117;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121514; --sheet: #1a1e1d; --ink: #e7ebe9; --muted: #9aa5a1; --line: #323a37;
+  --accent: #f2742e; --accent-soft: #3a2418; --good: #6cc597; --good-soft: #1b3226; --warn: #ff8a5c; --warn-soft: #3d2117;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.02; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.4rem, 5.6vw, 4rem); font-weight: 700; text-transform: uppercase; }
+h2 { font-size: 1.9rem; font-weight: 700; text-transform: uppercase; }
+h3 { font-size: 1.35rem; font-weight: 600; }
+p { margin: 0; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.eyebrow { font: 500 0.76rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.eyebrow::after { content: ""; flex: 0 0 48px; height: 1px; background: var(--accent); }
+button { font: inherit; color: inherit; }
+button:focus-visible, .card:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; justify-content: space-between; align-items: center; height: 64px; gap: 16px; }
+.brand { font: 700 1.6rem/1 var(--display); letter-spacing: 0.12em; }
+.brand span { color: var(--accent); }
+.btn { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: #fff; font: 600 0.95rem/1 var(--body); padding: 12px 16px; border-radius: 4px; border: 0; cursor: pointer; }
+.btn:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+
+.intro { padding: 56px 0 28px; }
+.lead { font-size: 1.1rem; color: var(--muted); margin-top: 16px; max-width: 64ch; }
+.note { margin-top: 14px; font: 400 0.82rem/1.4 var(--mono); color: var(--muted); }
+
+.filters { position: sticky; top: 64px; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--line); padding: 14px 0; }
+.filters .wrap { display: grid; gap: 10px; }
+.fl-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.fl-label { font: 500 0.72rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); width: 64px; }
+.fchip { font: 500 0.84rem/1 var(--body); padding: 8px 11px; border: 1.5px solid var(--line); background: var(--sheet); border-radius: 99px; cursor: pointer; color: var(--ink); }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.count { font: 500 0.8rem/1 var(--mono); color: var(--muted); margin-left: auto; }
+
+.group { padding: 44px 0 8px; }
+.group-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+.group-head .n { font: 500 0.8rem/1 var(--mono); color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+.card { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; text-align: left; transition: border-color .15s, transform .15s; }
+.card:hover { border-color: var(--ink); }
+.sk-box { background: var(--paper); border-radius: 4px; border: 1px solid var(--line); position: relative; }
+.sk-box .tagd { position: absolute; top: 6px; right: 8px; font: 500 0.62rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.sk { display: block; width: 100%; height: auto; }
+.card-top { display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 8px; }
+.stage { font: 500 0.7rem/1 var(--mono); padding: 5px 8px; border-radius: 99px; white-space: nowrap; }
+.st-N { background: var(--accent); color: #fff; }
+.st-U { background: var(--accent-soft); color: var(--accent); }
+.st-C { background: var(--good-soft); color: var(--good); }
+.st-L { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+.lbl { font: 500 0.68rem/1 var(--mono); text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 4px; }
+.lbl.why { color: var(--accent); }
+.card p { font-size: 0.93rem; }
+.who { font: 400 0.78rem/1.3 var(--mono); color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto; }
+
+/* SVG sketch styling */
+.sk text { font-family: var(--mono); font-size: 10px; fill: var(--ink); }
+.sk .tm { fill: var(--muted); }
+.sk .ta { fill: var(--accent); }
+.sk .tg { fill: var(--good); }
+.sk .tw { fill: var(--warn); }
+.sk .tb { font-family: var(--body); font-weight: 600; font-size: 11px; }
+.sk .tl { font-family: var(--display); font-weight: 700; font-size: 17px; }
+.sk .tinv { fill: #fff; }
+.sk .b { fill: var(--sheet); stroke: var(--line); stroke-width: 1; }
+.sk .bi { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.2; }
+.sk .bo { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.sk .bd { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.sk .f { fill: var(--line); opacity: 0.55; }
+.sk .k { fill: var(--ink); }
+.sk .a { fill: var(--accent); }
+.sk .as { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+.sk .g { fill: var(--good); }
+.sk .gs { fill: var(--good-soft); stroke: var(--good); stroke-width: 1; }
+.sk .w { fill: var(--warn); }
+.sk .ws { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1; }
+.sk .ln { stroke: var(--line); stroke-width: 1; }
+.sk .li { stroke: var(--ink); stroke-width: 1.2; fill: none; }
+.sk .la { stroke: var(--accent); stroke-width: 1.5; fill: none; }
+.sk .lad { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+.sk .lg { stroke: var(--good); stroke-width: 1.5; fill: none; }
+.sk .mk { fill: var(--ink); }
+.sk .mka { fill: var(--accent); }
+
+/* Presentation */
+.pres { position: fixed; inset: 0; z-index: 50; background: var(--paper); display: none; flex-direction: column; }
+.pres.open { display: flex; }
+.pres-top { display: flex; justify-content: space-between; align-items: center; padding: 16px 28px; border-bottom: 1px solid var(--line); gap: 12px; }
+.pres-top .crumb { font: 500 0.8rem/1 var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.pres-body { flex: 1; display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; padding: 28px 56px; overflow: auto; }
+.pres-sk { background: var(--sheet); border: 1px solid var(--line); border-radius: 8px; padding: 18px; position: relative; }
+.pres-sk .tagd { position: absolute; top: 10px; right: 14px; font: 500 0.66rem/1 var(--mono); text-transform: uppercase; color: var(--muted); letter-spacing: 0.06em; }
+.pres-txt h2 { font-size: clamp(2.2rem, 4vw, 3.4rem); margin: 14px 0 26px; }
+.pres-txt .lbl { font-size: 0.74rem; margin-bottom: 8px; }
+.pres-txt p { font-size: 1.2rem; line-height: 1.5; margin-bottom: 26px; max-width: 46ch; }
+.pres-txt .who { font-size: 0.85rem; border: 0; padding: 0; }
+.pres-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 28px; border-top: 1px solid var(--line); gap: 12px; }
+.pres-nav .ctr { font: 500 0.9rem/1 var(--mono); color: var(--muted); }
+.pres-nav .hint { font: 400 0.75rem/1 var(--mono); color: var(--muted); }
+
+@media (max-width: 860px) {
+  .pres-body { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+  .pres-txt p { font-size: 1.05rem; }
+  .fl-label { width: 100%; }
+  .pres-nav .hint { display: none; }
+}
+@media (max-width: 480px) {
+  .wrap { padding: 0 16px; }
+  .grid { grid-template-columns: 1fr; }
+  .count { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="mk" style="fill:var(--ink)"/></marker>
+    <marker id="ara" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">MONA<span>C</span>O</div>
+    <button class="btn" id="start-pres" type="button">Mod prezentare</button>
+  </div>
+</header>
+
+<section class="intro">
+  <div class="wrap">
+    <div class="eyebrow">Catalog de funcționalități</div>
+    <h1>Ce poate face Monaco, pe rând</h1>
+    <p class="lead">Fiecare funcționalitate are o schiță, ce face și de ce contează pentru firma dumneavoastră. Nu le construim pe toate: alegem împreună, în funcție de locul în care pierdeți cei mai mulți bani.</p>
+    <p class="note">Schițele sunt orientative, cu date demonstrative. Apăsați pe orice funcționalitate pentru a o vedea mare.</p>
+  </div>
+</section>
+
+<div class="filters">
+  <div class="wrap">
+    <div class="fl-row" id="fl-group" role="group" aria-label="Filtru pe grup"><span class="fl-label">Grup</span></div>
+    <div class="fl-row" id="fl-stage" role="group" aria-label="Filtru pe etapă"><span class="fl-label">Etapă</span><span class="count" id="count"></span></div>
+  </div>
+</div>
+
+<main class="wrap" id="catalog"></main>
+
+<div class="pres" id="pres" role="dialog" aria-modal="true" aria-labelledby="p-name">
+  <div class="pres-top">
+    <span class="crumb" id="p-group"></span>
+    <button class="btn ghost" id="p-close" type="button">Închide</button>
+  </div>
+  <div class="pres-body">
+    <div class="pres-sk"><span class="tagd">Schiță · date demonstrative</span><div id="p-sk"></div></div>
+    <div class="pres-txt">
+      <span class="stage" id="p-stage"></span>
+      <h2 id="p-name"></h2>
+      <div class="lbl">Ce face</div>
+      <p id="p-what"></p>
+      <div class="lbl why">De ce contează</div>
+      <p id="p-why"></p>
+      <div class="who" id="p-who"></div>
+    </div>
+  </div>
+  <div class="pres-nav">
+    <button class="btn ghost" id="p-prev" type="button">← Înapoi</button>
+    <span class="ctr" id="p-ctr"></span>
+    <span class="hint">Săgeți stânga / dreapta · Esc pentru ieșire</span>
+    <button class="btn" id="p-next" type="button">Următoarea →</button>
+  </div>
+</div>
+
+<footer style="padding:40px 0 48px; margin-top:56px; border-top:1px solid var(--line); font:400 0.8rem/1.4 var(--mono); color:var(--muted)">
+  <div class="wrap">Monaco · un proiect Web Minds SRL</div>
+</footer>
+
+<script>
+(function () {
+/* ---------- primitive pentru schițe (viewBox 320 × 190) ---------- */
+const r = (x, y, w, h, c = 'b', rx = 4) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" class="${c}"/>`;
+const t = (x, y, s, c = '', a = 'start') => `<text x="${x}" y="${y}" class="${c}" text-anchor="${a}">${s}</text>`;
+const l = (x1, y1, x2, y2, c = 'li', m = '') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${c}" ${m ? `marker-end="url(#${m})"` : ''}/>`;
+const p = (d, c = 'li', m = '') => `<path d="${d}" class="${c}" ${m ? `marker-end="url(#${m})"` : ''}/>`;
+const c = (x, y, rad, cl = 'k') => `<circle cx="${x}" cy="${y}" r="${rad}" class="${cl}"/>`;
+const pill = (x, y, s, kind = 'gs', tc = 'tg') => { const w = s.length * 6 + 14; return r(x, y, w, 15, kind, 7.5) + t(x + w / 2, y + 11, s, tc, 'middle'); };
+const bar = (x, y, w, frac, cl = 'k', h = 8) => r(x, y, w, h, 'f', 2) + r(x, y, Math.max(0, w * Math.min(frac, 1)), h, cl, 2);
+const phone = (x, y, w = 110, h = 170) => r(x, y, w, h, 'bi', 14) + r(x + w / 2 - 14, y + 7, 28, 4, 'f', 2);
+const doc = (x, y, w, h) => r(x, y, w, h, 'bi', 3) + p(`M${x + w - 14} ${y}v14h14`, 'li');
+const lines = (x, y, w, n, gap = 9) => Array.from({ length: n }, (_, i) => r(x, y + i * gap, w * (i % 3 === 2 ? 0.6 : 1), 3, 'f', 1.5)).join('');
+const svg = (body) => `<svg class="sk" viewBox="0 0 320 190" role="img" aria-hidden="true">${body}</svg>`;
+
+/* ---------- schițele, câte una pentru fiecare funcționalitate ---------- */
+const S = {
+  range: () => r(16, 16, 66, 26) + t(24, 33, '65 m²') + r(90, 16, 66, 26) + t(98, 33, '3 camere') + r(164, 16, 62, 26) + t(172, 33, '1 baie') + r(234, 16, 70, 26, 'as') + t(242, 33, 'Standard', 'ta') +
+    l(160, 50, 160, 76, 'li', 'ar') + r(30, 104, 260, 10, 'f', 5) + r(110, 104, 92, 10, 'a', 5) + t(110, 96, '28.000 €', 'ta', 'middle') + t(202, 96, '34.000 €', 'ta', 'middle') +
+    t(160, 140, 'interval estimat pentru renovare', 'tm', 'middle') + t(160, 162, 'băile cântăresc separat în calcul', 'tm', 'middle'),
+  templates: () => [['2 camere', 'Desfaceri · Instalații', 16], ['3 camere', 'Instalații · Finisaje', 116], ['Baie', 'Gresie · Sanitare', 216]].map(([n, s, x], i) =>
+    r(x, 22, 88, 110, i === 1 ? 'as' : 'b') + t(x + 10, 44, n, 'tb') + lines(x + 10, 56, 68, 5, 10) + t(x + 10, 122, i === 1 ? 'folosit' : '', 'ta')).join('') +
+    l(160, 140, 160, 158, 'la', 'ara') + t(160, 178, 'deviz nou, pornit de la un proiect real', 'tm', 'middle'),
+  qty: () => [['Desfacere perete beton', '12 ml × 1,4', '…'], ['Tencuială pereți', '86 m²', '…'], ['Plintă', '48 ml', '…'], ['Șapă', '52 m² × 5 cm', '…']].map(([a, b], i) =>
+    l(16, 30 + i * 32, 304, 30 + i * 32, 'ln') + t(20, 50 + i * 32, a) + t(300, 50 + i * 32, b, i === 0 ? 'ta' : 'tm', 'end')).join('') + l(16, 158, 304, 158, 'ln') +
+    t(20, 178, 'coeficient pentru pereți de beton: 1,4', 'ta'),
+  materials: () => r(16, 20, 120, 150, 'bi') + t(28, 40, 'Deviz', 'tb') + lines(28, 52, 96, 9, 11) + l(146, 95, 172, 95, 'la', 'ara') +
+    r(180, 20, 124, 150, 'as') + t(192, 40, 'De cumpărat', 'tb') +
+    [['Adeziv', '14 saci'], ['Gresie', '57 m²'], ['Chit', '6 kg'], ['Plintă', '48 ml'], ['Profile', '22 buc']].map(([a, b], i) => t(192, 62 + i * 20, a) + t(294, 62 + i * 20, b, 'ta', 'end')).join(''),
+  tiers: () => [['Economic', 0.35], ['Mediu', 0.55], ['Premium', 0.8], ['Nișă', 1]].map(([n, f], i) =>
+    r(30 + i * 70, 150 - 110 * f, 50, 110 * f, i === 1 ? 'a' : 'f', 3) + t(55 + i * 70, 168, n, i === 1 ? 'ta' : 'tm', 'middle')).join('') + l(20, 150, 300, 150, 'li') +
+    t(20, 22, 'Mobilier · calculat pe volum', 'tb') + t(300, 22, 'ales: Mediu', 'ta', 'end'),
+  stages: () => [['Desfaceri', '3.200 €'], ['Instalații', '8.900 €'], ['Finisaje', '11.400 €'], ['Specializări', '4.100 €'], ['Mobilier', '6.000 €']].map(([n, v], i) =>
+    r(16, 14 + i * 32, 288, 26, i === 2 ? 'as' : 'b') + t(28, 31 + i * 32, n, 'tb') + t(292, 31 + i * 32, v, i === 2 ? 'ta' : 'tm', 'end')).join(''),
+  twodocs: () => doc(16, 16, 136, 160) + t(28, 36, 'Intern', 'tb') + [0, 1, 2, 3, 4, 5].map(i => t(28, 58 + i * 17, 'art. ' + (i + 1)) + t(140, 58 + i * 17, ['12,5', '86', '1,4', '48', '52', '6'][i] + ' × p.u.', 'tm', 'end')).join('') + t(28, 166, 'marjă 18%', 'ta') +
+    doc(168, 16, 136, 160) + t(180, 36, 'Pentru client', 'tb') + ['Desfaceri', 'Instalații', 'Finisaje', 'Mobilier'].map((n, i) => t(180, 62 + i * 22, n) + t(292, 62 + i * 22, '✓', 'tg', 'end')).join('') + t(180, 166, 'total, fără detalii', 'tm'),
+  branded: () => doc(56, 10, 208, 170) + r(72, 26, 40, 22, 'a', 3) + t(92, 41, 'LOGO', 'tinv', 'middle') + t(248, 40, 'Ofertă', 'tb', 'end') + lines(72, 64, 176, 4, 11) +
+    [0, 1, 2].map(i => r(72 + i * 62, 116, 54, 40, 'f', 3)).join('') + t(160, 172, 'poze din lucrările firmei', 'tm', 'middle'),
+  calc: () => r(16, 20, 140, 150, 'bi') + t(28, 42, 'Șapă', 'tb') + t(28, 66, 'Suprafață', 'tm') + r(28, 72, 116, 20, 'b') + t(36, 86, '52 m²') + t(28, 112, 'Grosime', 'tm') + r(28, 118, 116, 20, 'b') + t(36, 132, '5 cm') +
+    l(164, 95, 186, 95, 'la', 'ara') + r(194, 50, 110, 90, 'as') + t(249, 82, '104 saci', 'tl', 'middle') + t(249, 104, '25 kg / sac', 'ta', 'middle') + t(249, 124, 'cost estimativ', 'tm', 'middle'),
+  scan: () => phone(16, 10) + r(28, 30, 86, 120, 'f', 4) + [0, 1, 2, 3, 4].map(i => l(36, 46 + i * 20, 106, 46 + i * 20 + (i % 2 ? 2 : -2), 'li')).join('') +
+    l(136, 95, 166, 95, 'la', 'ara') + r(174, 20, 130, 150, 'as') + t(186, 40, 'Articole preluate', 'tb') +
+    [['Gresie baie', '12 m²'], ['Adeziv', '6 saci'], ['Manoperă', '12 m²'], ['Plintă', '18 ml'], ['Silicon', '4 buc']].map(([a, b], i) => t(186, 62 + i * 20, a) + t(294, 62 + i * 20, b, 'ta', 'end')).join(''),
+
+  categories: () => t(16, 24, 'Buget total 36.000 €', 'tb') + (() => { let x = 16; return [['Manoperă', 14, 'k'], ['Materiale', 9.5, 'a'], ['Spec.', 5, 'f'], ['Mobilier', 6, 'as'], ['Mgmt', 1.5, 'b']].map(([n, v, cl]) => { const w = 288 * v / 36; const s = r(x, 40, w, 34, cl, 0) + t(x + w / 2, 94, n, 'tm', 'middle') + t(x + w / 2, 110, v.toLocaleString('ro-RO') + 'k', '', 'middle'); x += w; return s; }).join(''); })() +
+    r(16, 40, 288, 34, 'bo', 0) + t(160, 150, 'fiecare categorie: alt furnizor, alt ritm de plată', 'tm', 'middle'),
+  versions: () => [['Estimat', '32.000 €', 'prima discuție'], ['Deviz', '35.200 €', 'după vizită'], ['Buget', '36.000 €', 'la semnare']].map(([n, v, s], i) =>
+    r(16 + i * 104, 40, 88, 90, i === 2 ? 'as' : 'b') + t(60 + i * 104, 64, n, 'tb', 'middle') + t(60 + i * 104, 92, v, i === 2 ? 'ta' : '', 'middle') + t(60 + i * 104, 116, s, 'tm', 'middle') +
+    (i < 2 ? l(106 + i * 104, 85, 118 + i * 104, 85, 'li', 'ar') : '')).join('') + t(160, 160, 'istoricul fiecărei schimbări rămâne vizibil', 'tm', 'middle'),
+  budgetbars: () => [['Manoperă', 0.7, '9.800 / 14.000'], ['Materiale', 0.83, '7.900 / 9.500'], ['Instalații', 1.08, '5.400 / 5.000'], ['Mobilier', 0.35, '2.100 / 6.000'], ['Mgmt', 0.6, '900 / 1.500']].map(([n, f, v], i) =>
+    t(16, 32 + i * 32, n) + bar(96, 24 + i * 32, 110, f, f > 1 ? 'w' : 'k') + t(304, 32 + i * 32, v, f > 1 ? 'tw' : 'tm', 'end')).join(''),
+  expenses: () => [['Bon · Dedeman', '1.240 €', 'Materiale'], ['Factură · instalator', '2.100 €', 'Instalații'], ['Plată · echipa gresie', '1.800 €', 'Manoperă'], ['Bon · transport', '90 €', 'Materiale']].map(([a, b, k], i) =>
+    r(16, 14 + i * 42, 288, 34, 'b') + r(24, 22 + i * 42, 18, 18, 'f', 2) + t(50, 34 + i * 42, a) + t(50, 45 + i * 42, b, 'tm') + pill(206, 23 + i * 42, k, 'as', 'ta')).join(''),
+  forecast: () => l(30, 160, 300, 160, 'li') + l(30, 20, 30, 160, 'li') + l(30, 60, 300, 60, 'lad') + t(298, 54, 'buget 36.000', 'ta', 'end') +
+    p('M30 160 L80 140 L130 120 L170 100 L200 86', 'li') + p('M200 86 L250 66 L300 52', 'la') + c(200, 86, 3.5) + t(206, 102, 'azi') + t(298, 44, 'prognoză 36.400', 'tw', 'end') + t(36, 178, 'început', 'tm') + t(300, 178, 'predare', 'tm', 'end'),
+  alert: () => t(16, 36, 'Materiale', 'tb') + bar(16, 48, 288, 0.92, 'a', 14) + l(16 + 288 * 0.9, 40, 16 + 288 * 0.9, 70, 'li') + t(16 + 288 * 0.9, 84, 'prag 90%', '', 'middle') +
+    r(40, 110, 240, 54, 'ws') + t(56, 132, 'Materiale: 92% din buget folosit', 'tw') + t(56, 150, 'Mai sunt de făcut finisajele.', 'tm'),
+  margin: () => p('M60 150 A100 100 0 0 1 260 150', 'ln') + p('M60 150 A100 100 0 0 1 222 86', 'la') + t(160, 128, '14%', 'tl', 'middle') + t(160, 146, 'marjă acum', 'tm', 'middle') +
+    t(160, 174, 'planificată la semnare: 18%', 'tm', 'middle'),
+  changes: () => r(16, 16, 288, 110, 'bi') + t(28, 38, 'Lucrare suplimentară #3', 'tb') + t(28, 60, 'Nișă în baie, cu iluminare') + t(28, 80, '+ 650 €', 'ta') + t(28, 100, 'total nou: 36.650 €', 'tm') +
+    pill(206, 30, 'Așteaptă clientul', 'as', 'ta') + r(16, 140, 140, 32, 'b') + t(86, 160, 'Respinsă', 'tm', 'middle') + r(164, 140, 140, 32, 'a') + t(234, 160, 'Aprobată', 'tinv', 'middle'),
+
+  shoplist: () => t(16, 24, 'De cumpărat · etapa Finisaje', 'tb') + [['Gresie 60×120', true], ['Adeziv flexibil', true], ['Chit de rosturi', false], ['Profile colț', false], ['Silicon sanitar', false]].map(([n, d], i) =>
+    r(16, 38 + i * 28, 14, 14, d ? 'a' : 'b', 2) + t(40, 49 + i * 28, n, d ? 'tm' : '') + t(304, 49 + i * 28, d ? 'cumpărat' : 'Furnizor A', d ? 'tg' : 'tm', 'end')).join(''),
+  rfq: () => r(16, 66, 100, 60, 'as') + t(66, 92, 'Listă', 'tb', 'middle') + t(66, 108, '14 articole', 'ta', 'middle') +
+    [['Furnizor A', 24], ['Furnizor B', 80], ['Furnizor C', 136]].map(([n, y]) => p(`M116 96 C150 96 150 ${y + 14} 184 ${y + 14}`, 'la', 'ara') + r(190, y, 114, 28, 'b') + t(247, y + 18, n, '', 'middle')).join(''),
+  compare: () => [['A', '4.120 €', '10 zile', false], ['B', '3.890 €', '21 zile', false], ['C', '3.960 €', '7 zile', true]].map(([n, v, d, best], i) =>
+    r(16 + i * 100, 20, 88, 140, best ? 'as' : 'b') + t(60 + i * 100, 44, 'Furnizor ' + n, 'tb', 'middle') + t(60 + i * 100, 80, v, best ? 'ta' : '', 'middle') + t(60 + i * 100, 104, 'livrare', 'tm', 'middle') + t(60 + i * 100, 120, d, '', 'middle') +
+    (best ? t(60 + i * 100, 148, 'ales', 'ta', 'middle') : '')).join('') + t(160, 180, 'gresie 60×120 · 57 m²', 'tm', 'middle'),
+  order: () => r(16, 30, 120, 120, 'as') + t(76, 56, 'Oferta C', 'tb', 'middle') + t(76, 80, '3.960 €', 'ta', 'middle') + r(32, 104, 88, 26, 'a') + t(76, 121, 'Comandă', 'tinv', 'middle') +
+    l(146, 90, 172, 90, 'la', 'ara') + doc(180, 20, 124, 150) + t(192, 42, 'Proformă', 'tb') + lines(192, 56, 96, 6, 12) + t(192, 140, '3.960 €', 'ta') + t(192, 158, 'legată de: Materiale', 'tm'),
+  status3: () => [['Ofertat', 'b', ''], ['Rezervat', 'as', 'ta'], ['Livrat', 'gs', 'tg']].map(([n, cl, tc], i) =>
+    r(16 + i * 102, 20, 86, 30, cl) + t(59 + i * 102, 39, n, tc || 'tb', 'middle') + (i < 2 ? l(104 + i * 102, 35, 116 + i * 102, 35, 'li', 'ar') : '')).join('') +
+    [['Parchet stejar', 0], ['Obiecte sanitare', 1], ['Gresie 60×120', 2], ['Uși interioare', 0]].map(([n, s], i) => t(16, 84 + i * 26, n) + c(59 + s * 102, 80 + i * 26, 5, s === 2 ? 'g' : s === 1 ? 'a' : 'f')).join(''),
+  countdown: () => l(16, 100, 304, 100, 'li') + [0, 1, 2, 3, 4, 5].map(i => l(16 + i * 57.6, 96, 16 + i * 57.6, 104, 'li') + t(16 + i * 57.6, 120, 'S' + (i + 1), 'tm', 'middle')).join('') +
+    p('M60 100 L60 60', 'la') + c(60, 100, 4, 'a') + t(60, 52, 'comandați azi', 'ta', 'middle') + p('M290 100 L290 60', 'lg') + c(290, 100, 4, 'g') + t(290, 52, 'montaj', 'tg', 'middle') +
+    r(60, 72, 230, 10, 'as', 5) + t(175, 150, 'Uși interioare · livrare 5 săptămâni', '', 'middle') + t(175, 168, 'mai sunt 6 zile până la termenul de comandă', 'tw', 'middle'),
+  sync: () => [['Furnizor', 30], ['Livrator', 80], ['Montator', 130]].map(([n, y]) => t(16, y + 4, n, 'tb') + l(86, y, 304, y, 'ln')).join('') +
+    l(220, 16, 220, 160, 'lad') + c(220, 30, 6, 'k') + c(220, 80, 6, 'k') + c(220, 130, 6, 'a') + t(220, 178, 'joi, 8:00 · totul în aceeași zi', 'ta', 'middle') +
+    c(130, 30, 4, 'f') + t(130, 22, 'confirmat', 'tm', 'middle'),
+  suppliers: () => [['Furnizor A', 'gresie, adezivi', '4,6'], ['Furnizor B', 'obiecte sanitare', '4,1'], ['Furnizor C', 'parchet', '4,8'], ['Tâmplărie D', 'uși, livrare 5 săpt.', '4,3']].map(([n, s, v], i) =>
+    r(16, 12 + i * 42, 288, 34, 'b') + c(36, 29 + i * 42, 9, 'f') + t(54, 26 + i * 42, n, 'tb') + t(54, 39 + i * 42, s, 'tm') + t(292, 33 + i * 42, 'preț vechi ✓', 'tg', 'end')).join(''),
+
+  payplan: () => t(16, 26, 'Total lucrare 36.000 €', 'tb') + (() => { let x = 16; return [['Avans', 30, 'k'], ['Etapa 1', 25, 'a'], ['Etapa 2', 25, 'as'], ['Recepție', 20, 'b']].map(([n, v, cl]) => { const w = 288 * v / 100; const s = r(x, 44, w, 32, cl, 0) + t(x + 6, 96, n, '') + t(x + 6, 112, v + '%', 'tm'); x += w; return s; }).join(''); })() +
+    r(16, 44, 288, 32, 'bo', 0) + t(16, 150, 'fiecare tranșă legată de o etapă din deviz', 'tm'),
+  paystatus: () => [['Avans', '10.800 €', 'Achitată', 'gs', 'tg'], ['Etapa 1', '9.000 €', 'Achitată', 'gs', 'tg'], ['Etapa 2', '9.000 €', 'Urmează', 'as', 'ta'], ['Recepție', '7.200 €', 'Planificată', 'b', 'tm']].map(([n, v, s, k, tc], i) =>
+    l(16, 18 + i * 38, 304, 18 + i * 38, 'ln') + t(16, 42 + i * 38, n, 'tb') + t(150, 42 + i * 38, v, '', 'end') + pill(196, 30 + i * 38, s, k, tc)).join('') + l(16, 170, 304, 170, 'ln'),
+  payout: () => [['Echipa gresie', '1.800 €', 'Plătit', 'gs', 'tg'], ['Instalator', '2.100 €', 'Scadent vineri', 'ws', 'tw'], ['Furnizor C', '3.960 €', 'Plătit', 'gs', 'tg'], ['Electrician', '1.400 €', 'Peste 2 săpt.', 'b', 'tm']].map(([n, v, s, k, tc], i) =>
+    l(16, 18 + i * 38, 304, 18 + i * 38, 'ln') + t(16, 42 + i * 38, '→ ' + n) + t(170, 42 + i * 38, v, '', 'end') + pill(184, 30 + i * 38, s, k, tc)).join('') + l(16, 170, 304, 170, 'ln'),
+  contract: () => doc(16, 30, 110, 140) + t(28, 52, 'Deviz', 'tb') + lines(28, 64, 80, 6, 12) + l(134, 100, 160, 100, 'la', 'ara') +
+    doc(168, 14, 136, 166) + t(180, 36, 'Contract de lucrări', 'tb') + lines(180, 50, 108, 7, 11) + t(180, 140, 'aceleași sume și etape', 'ta') + l(180, 162, 240, 162, 'li') + t(180, 174, 'semnătură', 'tm'),
+  sign: () => phone(105, 6) + t(160, 36, 'Contract', 'tb', 'middle') + lines(118, 46, 84, 4, 9) + r(118, 90, 84, 44, 'b') +
+    p('M126 120 C136 100 146 128 156 112 S176 104 194 118', 'la') + r(118, 144, 84, 20, 'a') + t(160, 158, 'Semnez', 'tinv', 'middle'),
+  invoice: () => doc(56, 10, 208, 170) + t(72, 34, 'Factură · etapa 1', 'tb') + lines(72, 48, 176, 6, 12) + t(72, 138, 'Total 9.000 €', '') + pill(164, 150, 'trimisă în e-Factura', 'gs', 'tg'),
+  export: () => r(16, 30, 150, 130, 'bi') + [0, 1, 2, 3, 4].map(i => l(16, 56 + i * 21, 166, 56 + i * 21, 'ln')).join('') + l(70, 30, 70, 160, 'ln') + l(120, 30, 120, 160, 'ln') +
+    l(176, 95, 206, 95, 'la', 'ara') + doc(214, 50, 90, 90) + t(259, 100, '.xlsx', 'tl', 'middle') + t(259, 120, 'oricând', 'tm', 'middle'),
+
+  projstatus: () => [['Ofertă', ['Baie Popescu']], ['Acceptat', ['Ap. 2 cam.']], ['În execuție', ['Ap. 3 cam.', 'Casă P+1']], ['Finalizat', ['Studio']]].map(([n, items], i) =>
+    r(12 + i * 76, 14, 70, 162, 'b') + t(47 + i * 76, 32, n, 'tb', 'middle') + items.map((it, j) => r(18 + i * 76, 44 + j * 40, 58, 32, i === 2 ? 'as' : 'bi') + t(47 + i * 76, 64 + j * 40, it, i === 2 ? 'ta' : '', 'middle')).join('')).join(''),
+  week: () => ['L', 'Ma', 'Mi', 'J', 'V'].map((d, i) => t(76 + i * 52, 24, d, 'tb', 'middle')).join('') +
+    [['S47', [[0, 2, 'Instalații']]], ['S48', [[1, 4, 'Șapă']]], ['S49', [[0, 3, 'Gresie'], [3, 5, 'Comandă uși']]]].map(([w, items], i) =>
+      t(16, 56 + i * 44, w, 'tm') + l(50, 36 + i * 44, 310, 36 + i * 44, 'ln') + items.map(([a, b, n], j) => r(52 + a * 52, 42 + i * 44, (b - a) * 52 - 4, 22, n.startsWith('Comandă') ? 'as' : 'bi') + t(58 + a * 52, 57 + i * 44, n, n.startsWith('Comandă') ? 'ta' : '')).join('')).join('') +
+    t(16, 180, 'pregătit cu 2–3 săptămâni înainte', 'tm'),
+  crew: () => [['Electrician', 0, 2], ['Instalator', 1, 3], ['Gresie', 3, 6], ['Zugrav', 6, 8]].map(([n, a, b], i) =>
+    t(16, 40 + i * 34, n, 'tb') + l(96, 36 + i * 34, 304, 36 + i * 34, 'ln') + r(96 + a * 26, 26 + i * 34, (b - a) * 26 - 3, 18, i === 2 ? 'as' : 'bi')).join('') + t(96, 176, 'zile pe șantier', 'tm'),
+  journal: () => [['Luni', 'Instalații sanitare gata'], ['Marți', 'Șapă turnată, se usucă'], ['Joi', 'Gresie baie, 60%']].map(([d, s], i) =>
+    c(30, 34 + i * 54, 5, i === 2 ? 'a' : 'k') + (i < 2 ? l(30, 40 + i * 54, 30, 82 + i * 54, 'li') : '') + t(46, 38 + i * 54, d, 'tb') + t(46, 54 + i * 54, s, 'tm') + r(240, 22 + i * 54, 64, 40, 'f', 3)).join(''),
+  progress: () => [['Desfaceri', 1], ['Instalații', 1], ['Finisaje', 0.6], ['Mobilier', 0]].map(([n, f], i) =>
+    t(16, 34 + i * 34, n) + bar(100, 26 + i * 34, 130, f, f === 1 ? 'g' : 'a') + t(304, 34 + i * 34, Math.round(f * 100) + '%', f === 1 ? 'tg' : 'tm', 'end')).join('') +
+    r(16, 152, 288, 28, 'as') + t(160, 170, 'de facturat acum: 6.840 €', 'ta', 'middle'),
+  timesheet: () => ['L', 'Ma', 'Mi', 'J', 'V'].map((d, i) => t(120 + i * 38, 24, d, 'tb', 'middle')).join('') + t(304, 24, 'Total', 'tb', 'end') +
+    [['Andrei', [8, 8, 6, 8, 8]], ['Mihai', [8, 8, 8, 0, 8]], ['Echipa 2', [16, 16, 0, 16, 8]]].map(([n, h], i) =>
+      l(16, 34 + i * 36, 304, 34 + i * 36, 'ln') + t(16, 56 + i * 36, n) + h.map((v, j) => t(120 + j * 38, 56 + i * 36, v || '–', v ? '' : 'tm', 'middle')).join('') + t(304, 56 + i * 36, h.reduce((a, b) => a + b, 0) + ' h', 'ta', 'end')).join('') +
+    l(16, 142, 304, 142, 'ln') + t(16, 170, 'cost real al manoperei pe proiect', 'tm'),
+
+  clientpage: () => phone(105, 6) + t(160, 34, 'Ap. 3 camere', 'tb', 'middle') + t(116, 54, 'Stadiu', 'tm') + bar(116, 60, 88, 0.62, 'a') +
+    [['Avans', 'achitat', 'tg'], ['Etapa 1', 'achitat', 'tg'], ['Etapa 2', '15 dec', 'ta'], ['Recepție', '–', 'tm']].map(([n, s, tc], i) => t(116, 90 + i * 18, n) + t(206, 90 + i * 18, s, tc, 'end')).join('') +
+    t(160, 166, 'fără prețuri pe unitate', 'tm', 'middle'),
+  approve: () => phone(105, 6) + t(160, 34, 'Modificare #3', 'tb', 'middle') + t(116, 58, 'Nișă în baie') + t(116, 76, '+ 650 €', 'ta') + t(116, 94, 'total: 36.650 €', 'tm') +
+    r(116, 112, 88, 22, 'a') + t(160, 127, 'Aprob', 'tinv', 'middle') + r(116, 140, 88, 22, 'b') + t(160, 155, 'Am o întrebare', 'tm', 'middle'),
+  notify: () => [['Pentru client', 'Tranșa „Etapa 2” e scadentă pe 15 dec.', 'b', ''], ['Pentru echipă', 'Comandați ușile: mai sunt 6 zile.', 'as', 'ta'], ['Pentru manager', 'Instalații: buget depășit cu 400 €.', 'ws', 'tw']].map(([h, s, cl, tc], i) =>
+    r(16 + i * 6, 14 + i * 56, 282, 48, cl) + t(28 + i * 6, 34 + i * 56, h, 'tb') + t(28 + i * 6, 50 + i * 56, s, tc || 'tm')).join(''),
+  dossier: () => p('M16 50 h80 l14 -16 h194 v140 h-288 z', 'bi') + [['Contract', 30], ['Facturi', 94], ['Garanții', 158], ['Poze', 222]].map(([n, x]) => doc(x, 70, 52, 66) + t(x + 26, 156, n, 'tm', 'middle')).join(''),
+  contacts: () => [['Instalator', 'Ion · 07xx xxx xxx'], ['Electrician', 'Radu · 07xx xxx xxx'], ['Uși', 'Tâmplărie D · service'], ['Gresie', 'Furnizor A · garanție']].map(([n, s], i) =>
+    r(16, 12 + i * 42, 288, 34, 'b') + c(36, 29 + i * 42, 9, 'f') + t(54, 26 + i * 42, n, 'tb') + t(54, 39 + i * 42, s, 'tm')).join(''),
+  electric: () => r(16, 16, 288, 158, 'bo', 0) + l(140, 16, 140, 110, 'li') + l(16, 110, 220, 110, 'li') + l(220, 110, 220, 174, 'li') +
+    [[40, 40], [110, 40], [180, 60], [270, 40], [60, 140], [270, 140]].map(([x, y], i) => r(x - 6, y - 6, 12, 12, i === 2 ? 'a' : 'bi', 2)).join('') +
+    r(166, 76, 128, 30, 'as') + t(174, 89, 'Priză dublă · C3', 'ta') + t(174, 100, 'model Legrand Niloé', 'tm'),
+  report: () => t(16, 26, 'Ap. 3 camere · raport final', 'tb') + [['Buget', '36.000 €', ''], ['Real', '36.400 €', 'tw'], ['Marjă', '14%', 'ta']].map(([a, b, cl], i) =>
+    r(16 + i * 100, 40, 88, 60, 'b') + t(60 + i * 100, 62, a, 'tm', 'middle') + t(60 + i * 100, 86, b, cl || 'tb', 'middle')).join('') +
+    t(16, 128, 'Unde s-a depășit:', 'tb') + t(16, 148, 'Instalații  +400 €  (țevi suplimentare)', 'tw') + t(16, 166, 'Mobilier    −180 €', 'tg'),
+  dashboard: () => t(16, 22, 'Proiect', 'tm') + t(150, 22, 'Buget', 'tm') + t(304, 22, 'Alertă', 'tm', 'end') +
+    [['Ap. 3 camere', 0.72, 'Instalații', 'ws', 'tw'], ['Casă P+1', 0.45, 'OK', 'gs', 'tg'], ['Ap. 2 camere', 0.2, 'OK', 'gs', 'tg'], ['Baie Popescu', 0.9, 'Comandă', 'as', 'ta']].map(([n, f, s, k, tc], i) =>
+      l(16, 32 + i * 36, 304, 32 + i * 36, 'ln') + t(16, 54 + i * 36, n, 'tb') + bar(150, 46 + i * 36, 80, f, f > 0.85 ? 'a' : 'k') + pill(304 - (s.length * 6 + 14), 42 + i * 36, s, k, tc)).join(''),
+  history: () => l(30, 150, 300, 150, 'li') + l(30, 20, 30, 150, 'li') + t(16, 16, 'Montaj gresie · €/m²', 'tb') +
+    [[60, 110, 'P1'], [110, 104, 'P2'], [160, 96, 'P3'], [210, 92, 'P4'], [260, 84, 'P5']].map(([x, y, n]) => c(x, y, 4, 'k') + t(x, 168, n, 'tm', 'middle')).join('') +
+    p('M60 110 L110 104 L160 96 L210 92 L260 84', 'li') + c(290, 80, 5, 'a') + t(304, 66, 'estimare nouă', 'ta', 'end'),
+  roles: () => [['Patron', ['Buget', 'Marjă', 'Plăți']], ['Manager proiect', ['Buget', 'Comenzi']], ['Șef de echipă', ['Plan', 'Jurnal']]].map(([n, rights], i) =>
+    r(16, 12 + i * 56, 288, 48, i === 0 ? 'as' : 'b') + c(38, 36 + i * 56, 10, 'f') + t(56, 32 + i * 56, n, 'tb') + rights.map((x, j) => t(56 + j * 62, 49 + i * 56, x, i === 0 ? 'ta' : 'tm')).join('')).join(''),
+  exportdata: () => r(16, 26, 120, 140, 'bi') + t(76, 54, 'Datele firmei', 'tb', 'middle') + ['Proiecte', 'Clienți', 'Plăți', 'Documente'].map((x, i) => t(32, 80 + i * 20, '· ' + x, 'tm')).join('') +
+    l(146, 96, 176, 96, 'la', 'ara') + doc(184, 46, 120, 100) + t(244, 96, 'arhivă', 'tl', 'middle') + t(244, 118, 'descărcare oricând', 'tm', 'middle'),
+  plan: () => r(16, 16, 288, 158, 'bo', 0) + l(150, 16, 150, 120, 'li') + l(16, 120, 220, 120, 'li') + r(30, 30, 106, 76, 'as', 0) + t(83, 72, 'Living 24 m²', 'ta', 'middle') +
+    l(30, 136, 136, 136, 'la') + l(30, 131, 30, 141, 'la') + l(136, 131, 136, 141, 'la') + t(83, 154, '6,00 m', 'ta', 'middle') + t(240, 60, 'perimetru 20 ml', 'tm', 'middle') + t(240, 76, '→ în deviz', 'ta', 'middle'),
+  catalog: () => [['Gresie 60×120', '38–52 €/m²'], ['Adeziv flexibil', '9–14 €/sac'], ['Parchet stejar', '45–70 €/m²']].map(([n, v], i) =>
+    r(16 + i * 100, 20, 88, 150, 'b') + r(26 + i * 100, 30, 68, 64, 'f', 3) + t(60 + i * 100, 116, n.split(' ')[0], 'tb', 'middle') + t(60 + i * 100, 130, n.split(' ').slice(1).join(' '), 'tm', 'middle') + t(60 + i * 100, 154, v, 'ta', 'middle')).join('')
+};
+
+/* ---------- conținut ---------- */
+const STAGES = { N: 'Etapa 1 · Nucleu', U: 'Etapa 2 · Urmărire', C: 'Etapa 3 · Client și predare', L: 'La cerere' };
+const G = [
+  ['Estimare și deviz', 'Aici se naște prețul. Dacă estimarea e greșită, tot bugetul de după e greșit.', [
+    ['Estimare rapidă pe m²', 'N', 'range', 'Din suprafață, numărul de camere și de băi și nivelul finisajelor, primiți un interval de cost.', 'Clientul vrea un preț din prima discuție. Băile schimbă mult prețul, de aceea se iau în calcul separat.', 'Manager, designer'],
+    ['Șabloane pe tip de lucrare', 'N', 'templates', 'Devize gata completate pentru lucrările care se repetă: 2 camere, 3 camere, baie.', 'Devizul nou pornește de la un proiect real, nu de la zero.', 'Manager, designer'],
+    ['Calcul pe cantități reale', 'N', 'qty', 'Calculul se face pe metru liniar și pe metru pătrat, cu coeficienți pentru lucrările grele, cum e desfacerea pereților de beton.', 'Estimările „din ochi” dau bugete greșite. Cantitățile reale, nu.', 'Manager'],
+    ['Materiale calculate din cantități', 'N', 'materials', 'Din deviz rezultă lista exactă de materiale, nu un procent din manoperă.', 'Știți ce cumpărați și cât. Lista devine direct lista de cumpărături.', 'Manager, constructor'],
+    ['Mobilier pe niveluri de preț', 'N', 'tiers', 'Mobilierul se calculează pe volum, în patru niveluri: economic, mediu, premium, nișă.', 'Mobilierul e una dintre cele mai mari sume. Clientul alege nivelul și vede imediat efectul asupra totalului.', 'Designer'],
+    ['Deviz pe etape', 'N', 'stages', 'Lucrarea e împărțită pe etape: desfaceri, instalații, finisaje, specializări, mobilier, fiecare cu subtotalul ei.', 'Etapele sunt baza pentru buget, plăți și programul de pe șantier.', 'Toată echipa'],
+    ['Deviz intern și deviz pentru client', 'N', 'twodocs', 'Același deviz, în două variante: detaliat pentru firmă, simplu pentru client, fără prețuri pe unitate și fără profit.', 'Firma își protejează marja, iar clientul înțelege ce plătește.', 'Manager'],
+    ['Ofertă cu identitatea firmei', 'C', 'branded', 'Logo, culori și poze din lucrările firmei, direct pe deviz.', 'O ofertă care arată profesionist câștigă încrederea clientului.', 'Manager, constructor'],
+    ['Calculatoare de necesar', 'L', 'calc', 'Calcule rapide pentru șapă, gresie, adeziv, vopsea, BCA sau polistiren.', 'Răspuns imediat la „cât material trebuie”, fără un deviz complet.', 'Constructor, proprietar'],
+    ['Preluare din poze', 'L', 'scan', 'Fotografiați o foaie scrisă de mână, un bon sau o factură, iar articolele intră singure în sistem.', 'Nu mai rescrieți de mână ce e deja pe hârtie.', 'Constructor, manager']
+  ]],
+  ['Bugetare', 'Bugetul leagă tot sistemul: estimarea îl creează, comenzile și plățile îl consumă, rapoartele îl citesc.', [
+    ['Buget pe categorii', 'N', 'categories', 'Suma proiectului e împărțită pe categorii: manoperă, materiale, specializări, mobilier, management.', 'Fiecare categorie are alt furnizor, alt ritm de plată și alt risc.', 'Manager, designer'],
+    ['Estimat, deviz, buget', 'N', 'versions', 'Trei niveluri legate între ele: fiecare preia datele din cel anterior și păstrează istoricul.', 'Vedeți cum s-a schimbat prețul de la prima discuție până la semnare.', 'Manager'],
+    ['Buget față de cheltuit', 'N', 'budgetbars', 'Pe fiecare categorie: cât era planificat și cât s-a cheltuit până azi.', 'Știți oricând unde e proiectul, fără să adunați facturi.', 'Manager, designer'],
+    ['Cheltuieli pe proiect', 'N', 'expenses', 'Bonuri, facturi și plăți către meseriași, fiecare legată de o categorie din buget.', 'Fără cheltuielile reale, bugetul rămâne doar o promisiune.', 'Manager'],
+    ['Prognoză', 'U', 'forecast', 'Estimează cât va costa proiectul la final, din ce s-a cheltuit și ce a mai rămas de făcut.', 'Aflați din timp dacă depășiți bugetul, nu la predare.', 'Manager'],
+    ['Avertizare la depășire', 'U', 'alert', 'Vă anunță când o categorie trece de un prag ales, de exemplu 90% cheltuit.', 'Problema se vede cât încă se mai poate corecta.', 'Manager'],
+    ['Marja pe proiect', 'U', 'margin', 'Arată cât câștigă firma pe proiect, actualizat pe parcurs.', 'La preț fix, orice depășire iese din marja firmei.', 'Manager'],
+    ['Lucrări suplimentare', 'U', 'changes', 'Modificările cerute pe parcurs se adaugă cu prețul lor și cu acordul clientului.', 'Modificările neconsemnate sunt o sursă frecventă de conflicte la plată.', 'Manager, designer']
+  ]],
+  ['Ofertare și achiziții', 'Mulți bani se pierd din comenzi făcute târziu, urmărite pe mesaje sau livrate când montatorul nu e acolo.', [
+    ['Necesar de cumpărat', 'N', 'shoplist', 'Devizul devine lista de cumpărături, pe etape și pe furnizori.', 'Nimic nu se uită și nimic nu se cumpără de două ori.', 'Manager, constructor'],
+    ['Cerere de ofertă', 'N', 'rfq', 'Trimiteți lista de materiale sau de lucrări către mai mulți furnizori ori meseriași deodată.', 'Prețul corect vine din mai multe oferte, nu din primul telefon.', 'Manager, designer'],
+    ['Compararea ofertelor', 'N', 'compare', 'Ofertele primite stau una lângă alta, pentru același material sau aceeași lucrare.', 'Alegeți pe preț, termen și condiții, la vedere.', 'Manager, designer'],
+    ['Comandă și proformă', 'U', 'order', 'Din oferta aleasă trimiteți comanda, iar proforma rămâne lângă proiect.', 'Fiecare comandă are un document și o sumă legată de buget.', 'Manager'],
+    ['Evidența comenzilor', 'U', 'status3', 'Fiecare material trece prin trei stări: ofertat, rezervat, livrat.', 'Vedeți într-un singur loc ce lipsește de pe șantier și de ce.', 'Manager'],
+    ['Termene de livrare', 'U', 'countdown', 'Pentru materialele cu livrare lungă, sistemul numără zilele rămase până când trebuie comandate.', 'Un material cu livrare de 5 săptămâni, comandat târziu, oprește lucrarea.', 'Manager'],
+    ['Livrare sincronizată cu montajul', 'U', 'sync', 'Livrarea se programează împreună cu montajul: furnizor, livrator și montator în aceeași zi.', 'Materialul fără montator se degradează pe șantier, iar montatorul fără material stă degeaba.', 'Manager'],
+    ['Baza de furnizori', 'L', 'suppliers', 'Contacte, prețuri obținute și termene de livrare, păstrate de la un proiect la altul.', 'Proiectul următor pornește cu furnizori verificați.', 'Manager, designer']
+  ]],
+  ['Plăți, contracte și facturi', 'Când clientul întreabă cât a plătit și ce urmează, răspunsul trebuie să fie pe ecran, în câteva secunde.', [
+    ['Grafic de plăți pe etape', 'U', 'payplan', 'Plata clientului e împărțită în tranșe: avans, plată la fiecare etapă, plata finală la recepție.', 'Clientul știe de la început când plătește, iar firma nu finanțează lucrarea din buzunar.', 'Manager'],
+    ['Evidența plăților clientului', 'U', 'paystatus', 'Fiecare tranșă are o stare: planificată, achitată sau urmează.', 'Când clientul întreabă cât a plătit, răspunsul e pe ecran, nu în extrasele de cont.', 'Manager'],
+    ['Plăți către furnizori și meseriași', 'U', 'payout', 'Ce s-a plătit, ce e scadent și către cine.', 'Vedeți câți bani ies din firmă, nu doar câți intră.', 'Manager'],
+    ['Contract din deviz', 'C', 'contract', 'Contractul de lucrări se generează din devizul acceptat.', 'Contractul are aceleași sume și etape ca devizul, fără rescriere.', 'Manager'],
+    ['Semnătură electronică', 'C', 'sign', 'Clientul semnează devizul și contractul de pe telefon.', 'Acordul clientului e consemnat; în caz de dispută, există dovada.', 'Manager, proprietar'],
+    ['Facturi și e-Factura', 'L', 'invoice', 'Facturi emise din deviz, pe etape, trimise automat în sistemul e-Factura.', 'Utile firmelor fără program de facturare; celelalte își păstrează programul actual.', 'Manager'],
+    ['Export pentru contabilitate', 'L', 'export', 'Cheltuielile și încasările se descarcă într-un format pentru contabil.', 'Contabilul primește datele fără să fie rescrise.', 'Manager']
+  ]],
+  ['Coordonarea șantierului', 'Managementul merge cu 2–3 săptămâni înaintea șantierului, nu în urma lui.', [
+    ['Starea lucrării', 'U', 'projstatus', 'Fiecare proiect are o stare: ofertă, acceptat, în execuție, finalizat.', 'Cu mai multe proiecte în paralel, vedeți dintr-o privire unde e fiecare.', 'Manager'],
+    ['Plan săptămânal', 'U', 'week', 'Ce se face în fiecare săptămână, pregătit cu 2–3 săptămâni înainte.', 'Comenzile și echipele se pregătesc la timp, nu în ziua în care e nevoie de ele.', 'Manager'],
+    ['Programarea echipelor', 'L', 'crew', 'Cine vine pe șantier și când, pe fiecare proiect.', 'Meseriașii nu se suprapun și nu se așteaptă unii pe alții.', 'Manager'],
+    ['Jurnal de șantier', 'L', 'journal', 'Note și poze zilnice, legate de etapa în lucru.', 'Ce s-a făcut și când rămâne consemnat, util și la dispute.', 'Manager, constructor'],
+    ['Situații de lucrări', 'L', 'progress', 'Ce s-a executat până la o dată și ce sumă se poate factura.', 'Plata pe etape se bazează pe lucrări constatate, nu pe estimări.', 'Manager'],
+    ['Pontaj', 'L', 'timesheet', 'Orele lucrate de fiecare om, pe proiect.', 'Arată costul real al manoperei, mai ales la firmele cu echipe proprii.', 'Manager']
+  ]],
+  ['Comunicarea cu clientul', 'Clientul care vede clar unde sunt banii pune mai puține întrebări și plătește la timp.', [
+    ['Pagina proiectului pentru client', 'C', 'clientpage', 'Un link cu devizul simplificat, plățile și stadiul lucrării, actualizat automat.', 'Răspunde la întrebările clientului înainte să le pună, fără să arate prețurile pe unitate sau profitul.', 'Proprietar, manager'],
+    ['Aprobarea modificărilor', 'C', 'approve', 'Clientul aprobă de pe telefon lucrările suplimentare și noul total.', 'Orice cost în plus are acordul clientului, consemnat.', 'Proprietar, manager'],
+    ['Notificări', 'C', 'notify', 'Mesaje automate către client (tranșă scadentă, etapă terminată) și către echipă (comandă de făcut, depășire de buget).', 'Nimeni nu mai trebuie să țină minte termenele.', 'Toată echipa, proprietar']
+  ]],
+  ['Predare și documente', 'Predarea e ultima impresie lăsată clientului și motivul pentru care vă recomandă mai departe.', [
+    ['Dosarul proiectului', 'C', 'dossier', 'Documente, poze, facturi și garanții, atașate proiectului pe parcurs.', 'La final nu mai trebuie adunat nimic: dosarul e deja complet.', 'Manager, proprietar'],
+    ['Lista de contacte la predare', 'C', 'contacts', 'Furnizorii, meseriașii și service-urile care au lucrat la proiect, cu datele lor.', 'Clientul știe pe cine să sune dacă se strică ceva.', 'Proprietar'],
+    ['Planșa instalației electrice', 'L', 'electric', 'Unde e fiecare priză și întrerupător, ce model are și pe ce circuit e.', 'Folosită la execuție și la orice reparație de mai târziu.', 'Manager, constructor']
+  ]],
+  ['Rapoarte și firmă', 'Datele adunate pe fiecare proiect devin, în timp, avantajul firmei.', [
+    ['Raport pe proiect', 'U', 'report', 'Buget față de real, marjă și depășiri, pe categorii.', 'Arată unde s-au pierdut bani, ca să nu se repete la proiectul următor.', 'Manager'],
+    ['Panou cu toate proiectele', 'U', 'dashboard', 'Toate proiectele active pe o pagină: stare, buget, încasări, alerte.', 'Vedeți imediat unde trebuie să interveniți.', 'Manager'],
+    ['Prețuri din proiectele anterioare', 'L', 'history', 'Prețurile și cantitățile reale din proiectele terminate rămân în sistem.', 'Estimarea următoare pornește de la datele firmei, nu de la ghicit.', 'Manager, designer'],
+    ['Utilizatori și roluri', 'N', 'roles', 'Fiecare om din firmă are contul și drepturile lui; de exemplu, șeful de echipă nu vede marja.', 'O firmă cu mai mulți oameni nu lucrează dintr-un singur cont.', 'Manager'],
+    ['Export de date', 'N', 'exportdata', 'Toate datele firmei se pot descărca oricând.', 'Datele sunt ale dumneavoastră și nu rămâneți legați de sistem.', 'Manager']
+  ]],
+  ['Unelte de precizie', 'Cresc precizia estimărilor; le adăugăm când clienții le cer.', [
+    ['Măsurători pe plan', 'L', 'plan', 'Lungimi și suprafețe măsurate direct pe planul apartamentului, care intră în deviz.', 'Cantitățile corecte de la început înseamnă un buget corect.', 'Manager, designer'],
+    ['Catalog de produse cu prețuri', 'L', 'catalog', 'Produse de la furnizori și producători, cu prețuri orientative actualizate.', 'Estimarea folosește prețuri reale, nu prețuri din memorie.', 'Manager, designer']
+  ]]
+];
+
+/* ---------- randare ---------- */
+const ALL = [];
+G.forEach(([gname, gdesc, items], gi) => items.forEach(([name, st, sk, what, why, who]) => ALL.push({ gi, gname, name, st, sk, what, why, who })));
+const state = { group: -1, stage: 'all' };
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const visible = () => ALL.filter(f => (state.group < 0 || f.gi === state.group) && (state.stage === 'all' || f.st === state.stage));
+
+function renderCatalog() {
+  const vis = visible();
+  const host = document.getElementById('catalog');
+  host.innerHTML = G.map(([gname, gdesc], gi) => {
+    const items = vis.filter(f => f.gi === gi);
+    if (!items.length) return '';
+    return `<section class="group"><div class="group-head"><h2>${gname}</h2><span class="n">${items.length}</span></div><p class="lead" style="margin:-6px 0 22px">${gdesc}</p><div class="grid">` +
+      items.map(f => `<article class="card" tabindex="0" data-i="${ALL.indexOf(f)}" aria-label="${esc(f.name)}">
+        <div class="sk-box"><span class="tagd">Schiță</span>${svg(S[f.sk]())}</div>
+        <div class="card-top"><h3>${f.name}</h3><span class="stage st-${f.st}">${STAGES[f.st]}</span></div>
+        <div><div class="lbl">Ce face</div><p>${f.what}</p></div>
+        <div><div class="lbl why">De ce contează</div><p>${f.why}</p></div>
+        <div class="who">Pentru: ${f.who}</div></article>`).join('') + '</div></section>';
+  }).join('');
+  document.getElementById('count').textContent = vis.length + ' din ' + ALL.length + ' funcționalități';
+}
+
+function chip(label, pressed, onclick) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'fchip'; b.textContent = label; b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+  b.addEventListener('click', onclick); return b;
+}
+function renderFilters() {
+  const fg = document.getElementById('fl-group'), fs = document.getElementById('fl-stage');
+  fg.querySelectorAll('.fchip').forEach(x => x.remove()); fs.querySelectorAll('.fchip').forEach(x => x.remove());
+  fg.append(chip('Toate', state.group < 0, () => { state.group = -1; update(); }));
+  G.forEach(([n], gi) => fg.append(chip(n, state.group === gi, () => { state.group = gi; update(); })));
+  const cnt = document.getElementById('count');
+  fs.insertBefore(chip('Toate', state.stage === 'all', () => { state.stage = 'all'; update(); }), cnt);
+  Object.entries(STAGES).forEach(([k, v]) => fs.insertBefore(chip(v, state.stage === k, () => { state.stage = k; update(); }), cnt));
+}
+function update() { renderFilters(); renderCatalog(); }
+
+/* ---------- mod prezentare ---------- */
+const pres = document.getElementById('pres');
+let list = [], pos = 0, lastFocus = null;
+function show() {
+  const f = list[pos];
+  document.getElementById('p-group').textContent = f.gname;
+  const st = document.getElementById('p-stage'); st.textContent = STAGES[f.st]; st.className = 'stage st-' + f.st;
+  document.getElementById('p-name').textContent = f.name;
+  document.getElementById('p-what').textContent = f.what;
+  document.getElementById('p-why').textContent = f.why;
+  document.getElementById('p-who').textContent = 'Pentru: ' + f.who;
+  document.getElementById('p-sk').innerHTML = svg(S[f.sk]());
+  document.getElementById('p-ctr').textContent = (pos + 1) + ' / ' + list.length;
+  document.getElementById('p-prev').disabled = pos === 0;
+  document.getElementById('p-next').textContent = pos === list.length - 1 ? 'Închide' : 'Următoarea →';
+}
+function open(startIdx) {
+  list = visible(); if (!list.length) return;
+  pos = Math.max(0, list.findIndex(f => ALL.indexOf(f) === startIdx));
+  lastFocus = document.activeElement;
+  pres.classList.add('open'); document.body.style.overflow = 'hidden';
+  show(); document.getElementById('p-next').focus();
+}
+function close() { pres.classList.remove('open'); document.body.style.overflow = ''; if (lastFocus) lastFocus.focus(); }
+function next() { if (pos < list.length - 1) { pos++; show(); } else close(); }
+function prev() { if (pos > 0) { pos--; show(); } }
+
+document.getElementById('start-pres').addEventListener('click', () => open(-1));
+document.getElementById('p-close').addEventListener('click', close);
+document.getElementById('p-next').addEventListener('click', next);
+document.getElementById('p-prev').addEventListener('click', prev);
+document.addEventListener('keydown', e => {
+  if (!pres.classList.contains('open')) return;
+  if (e.key === 'Escape') close();
+  else if (e.key === 'ArrowRight') next();
+  else if (e.key === 'ArrowLeft') prev();
+});
+document.getElementById('catalog').addEventListener('click', e => { const cd = e.target.closest('.card'); if (cd) open(+cd.dataset.i); });
+document.getElementById('catalog').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('card')) { e.preventDefault(); open(+e.target.dataset.i); } });
+
+update();
+})();
+</script>
+</body>
+</html>
